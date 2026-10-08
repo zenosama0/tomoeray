@@ -1,131 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Vault Admin</title>
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('vault-theme'); } catch (e) {}
+    if (!t) t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
 <style>
-  :root{ --bg:#150a26; --card:#241340; --card2:#2d1850; --line:rgba(217,184,240,.22); --txt:#f3e6fb; --dim:#d9b8f0; --gold:#e8c87e; --orchid:#9b5fc0; --ok:#8be0a4; --bad:#ff8a8a; --warn:#f3dca0; }
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--txt); line-height:1.5; padding:1.4rem; }
-  .wrap{ max-width:860px; margin:0 auto; }
-  h1{ font-size:1.5rem; margin-bottom:.2rem; }
-  h2{ font-size:1.05rem; margin-bottom:.6rem; color:var(--gold); }
-  p.sub{ color:var(--dim); font-size:.9rem; margin-bottom:1.2rem; }
-  .card{ background:linear-gradient(165deg,var(--card),var(--card2)); border:1px solid var(--line); border-radius:16px; padding:1.1rem 1.2rem; margin-bottom:1rem; }
-  input,select,textarea,button{ font:inherit; color:inherit; }
-  input,select,textarea{ background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:10px; padding:.5rem .7rem; outline:none; }
-  input:focus,select:focus,textarea:focus{ border-color:var(--orchid); }
-  select option{ background:#241340; }
-  button{ cursor:pointer; background:linear-gradient(160deg,#b87fe0,#5b2c8c); border:none; border-radius:10px; padding:.55rem 1rem; font-weight:600; }
-  button.ghost{ background:transparent; border:1px solid var(--line); }
-  button:disabled{ opacity:.4; cursor:not-allowed; }
-  .row{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
-  .msg{ font-size:.88rem; margin-top:.6rem; min-height:1.2rem; }
-  .ok{ color:var(--ok); } .bad{ color:var(--bad); } .warn{ color:var(--warn); }
-  .tabs{ display:flex; gap:.5rem; margin-bottom:1rem; }
-  .tab{ background:transparent; border:1px solid var(--line); }
-  .tab.on{ background:linear-gradient(160deg,#b87fe0,#5b2c8c); border-color:transparent; }
-  .drop{ border:2px dashed var(--line); border-radius:14px; padding:1.6rem; text-align:center; color:var(--dim); cursor:pointer; transition:.2s; }
-  .drop.over{ border-color:var(--gold); background:rgba(232,200,126,.07); }
-  .item{ display:grid; grid-template-columns:64px 1fr auto; gap:.8rem; align-items:center; padding:.7rem 0; border-top:1px solid var(--line); }
-  .item img{ width:64px; height:64px; object-fit:cover; border-radius:8px; background:#000; }
-  .item .fields{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
-  .item input[type=number]{ width:5.2rem; }
-  .item input.custom{ width:9rem; }
-  .final{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; color:var(--gold); }
-  .small{ font-size:.78rem; color:var(--dim); }
-  .hide{ display:none !important; }
-  textarea{ width:100%; min-height:340px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.8rem; }
-  code{ background:rgba(0,0,0,.3); padding:.05rem .35rem; border-radius:5px; }
-  .results a{ color:var(--gold); }
+:root[data-theme="dark"]{
+  --bg:#1e1e1e; --bg2:#181818; --bg3:#2a2a2a; --bg4:#333; --line:#2e2e2e; --text:#cccccc; --strong:#ffffff; --dim:#8b8b8b;
+  --accent:#3794ff; --btn:#0e639c; --btn-h:#1177bb; --btn-fg:#fff; --ok:#4ec9a0; --bad:#f48771; --warn:#d7ba7d; --status:#007acc;
+  --ed-bg:#1e1e1e; --ed-text:#d4d4d4; --ed-line:rgba(255,255,255,.045); --ed-sel:#264f78; --gutter:#6e7681; --gutter-bg:#1e1e1e;
+  --t-tag:#569cd6; --t-attr:#9cdcfe; --t-str:#ce9178; --t-com:#6a9955; --t-pun:#808080; --t-ent:#d7ba7d;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#ffffff; --bg2:#f3f3f3; --bg3:#ececec; --bg4:#e2e2e2; --line:#e0e0e0; --text:#3b3b3b; --strong:#111; --dim:#6e6e6e;
+  --accent:#005fb8; --btn:#005fb8; --btn-h:#0a6dc9; --btn-fg:#fff; --ok:#1a7f4b; --bad:#c72e2e; --warn:#946800; --status:#005fb8;
+  --ed-bg:#ffffff; --ed-text:#000000; --ed-line:rgba(0,0,0,.04); --ed-sel:#add6ff; --gutter:#6e7681; --gutter-bg:#ffffff;
+  --t-tag:#800000; --t-attr:#e50000; --t-str:#0000ff; --t-com:#008000; --t-pun:#800000; --t-ent:#ee0000;
+  color-scheme:light;
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; }
+body{ font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; }
+.hide{ display:none !important; }
+svg.i{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+button{ cursor:pointer; }
+
+/* ---------- controls ---------- */
+.btn{ display:inline-flex; align-items:center; gap:.45rem; height:30px; padding:0 .8rem; border-radius:6px; border:1px solid var(--line); background:var(--bg3); white-space:nowrap; }
+.btn:hover{ background:var(--bg4); }
+.btn.primary{ background:var(--btn); border-color:transparent; color:var(--btn-fg); }
+.btn.primary:hover{ background:var(--btn-h); }
+.btn.danger{ color:var(--bad); }
+.btn.ghost{ background:transparent; }
+.btn.sm{ height:26px; padding:0 .6rem; font-size:12px; }
+.btn.icon{ width:30px; padding:0; justify-content:center; }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.kbd{ font:11px ui-monospace,Menlo,Consolas,monospace; opacity:.75; border:1px solid currentColor; border-radius:4px; padding:0 .3rem; line-height:1.4; }
+input[type=text],input[type=password],input[type=number],select{ height:30px; padding:0 .6rem; border-radius:6px; border:1px solid var(--line); background:var(--bg); outline:none; }
+input:focus,select:focus{ border-color:var(--accent); }
+select option{ background:var(--bg); }
+input[type=checkbox]{ accent-color:var(--accent); }
+label.chk{ display:inline-flex; align-items:center; gap:.45rem; color:var(--dim); cursor:pointer; }
+
+/* ---------- login ---------- */
+#login{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg2); z-index:50; padding:1rem; }
+.login-box{ width:100%; max-width:380px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:1.6rem; }
+.login-box h1{ font-size:1.15rem; color:var(--strong); display:flex; align-items:center; gap:.5rem; margin-bottom:.25rem; }
+.login-box p{ color:var(--dim); margin-bottom:1.1rem; }
+.login-box .stack{ display:flex; flex-direction:column; gap:.6rem; }
+.login-box input{ width:100%; height:34px; }
+.login-box .btn{ justify-content:center; height:34px; }
+.msg{ min-height:1.2rem; margin-top:.7rem; font-size:12px; }
+.msg.ok{ color:var(--ok); } .msg.bad{ color:var(--bad); } .msg.warn{ color:var(--warn); }
+
+/* ---------- app shell ---------- */
+#app{ position:fixed; inset:0; display:grid; grid-template-columns:220px 1fr; grid-template-rows:1fr 24px; }
+#side{ background:var(--bg2); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
+.brand{ display:flex; align-items:center; gap:.55rem; padding:.9rem 1rem; color:var(--strong); font-weight:600; border-bottom:1px solid var(--line); }
+.nav{ padding:.5rem; display:flex; flex-direction:column; gap:2px; }
+.nav button{ display:flex; align-items:center; gap:.6rem; width:100%; padding:.5rem .7rem; border:none; background:transparent; border-radius:6px; text-align:left; color:var(--text); }
+.nav button:hover{ background:var(--bg3); }
+.nav button.on{ background:var(--bg3); color:var(--strong); box-shadow:inset 2px 0 0 var(--accent); }
+.nav .badge{ margin-left:auto; font-size:11px; background:var(--accent); color:#fff; border-radius:9px; padding:0 .45rem; }
+.nav .dot{ margin-left:auto; width:8px; height:8px; border-radius:50%; background:var(--warn); }
+.side-foot{ margin-top:auto; padding:.8rem; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:.6rem; }
+.folder{ display:flex; gap:.6rem; align-items:flex-start; }
+.folder .fname{ color:var(--strong); font-weight:600; overflow:hidden; text-overflow:ellipsis; max-width:150px; white-space:nowrap; }
+.folder .fstate{ font-size:12px; color:var(--dim); }
+.folder.ok .fstate{ color:var(--ok); } .folder.warn .fstate{ color:var(--warn); }
+.side-actions{ display:flex; gap:.4rem; }
+.side-actions .btn{ flex:1; justify-content:center; }
+
+#main{ min-width:0; min-height:0; display:flex; flex-direction:column; }
+.view{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.toolbar{ display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; padding:.6rem .9rem; border-bottom:1px solid var(--line); background:var(--bg); }
+.toolbar .sp{ flex:1; }
+.title{ font-size:14px; font-weight:600; color:var(--strong); margin-right:.4rem; }
+
+/* ---------- photos ---------- */
+#photoBody{ flex:1; min-height:0; overflow:auto; position:relative; }
+#photoBody.over::after{ content:"Drop to add"; position:absolute; inset:10px; border:2px dashed var(--accent); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--accent); background:color-mix(in srgb,var(--bg) 85%,transparent); }
+.empty{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; color:var(--dim); text-align:center; padding:2rem; }
+.empty .big{ width:44px; height:44px; opacity:.6; }
+.empty h3{ color:var(--strong); font-size:15px; font-weight:600; }
+.empty code,.hint code{ background:var(--bg3); padding:.05rem .35rem; border-radius:4px; font:12px ui-monospace,Menlo,Consolas,monospace; }
+.thead,.row{ display:grid; grid-template-columns:56px minmax(140px,1.4fr) 170px 150px 90px minmax(150px,1fr) 34px; gap:.7rem; align-items:center; padding:.45rem .9rem; }
+.thead{ position:sticky; top:0; background:var(--bg2); border-bottom:1px solid var(--line); color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:.04em; z-index:2; }
+.row{ border-bottom:1px solid var(--line); }
+.row:hover{ background:var(--bg2); }
+.row.dup{ background:color-mix(in srgb,var(--bad) 12%,transparent); }
+.row img{ width:48px; height:48px; object-fit:cover; border-radius:5px; background:var(--bg3); }
+.row .fn{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.row .fn small{ display:block; color:var(--dim); font-size:11px; }
+.row .final{ font:12px ui-monospace,Menlo,Consolas,monospace; color:var(--strong); }
+.row .final small{ display:block; font:11px system-ui; }
+.row .final .w{ color:var(--warn); } .row .final .e{ color:var(--bad); }
+.row input[type=number]{ width:100%; }
+.row input.custom{ margin-top:.3rem; width:100%; }
+.row select{ width:100%; }
+
+/* ---------- editor ---------- */
+#view-content{ background:var(--ed-bg); }
+.tabs{ display:flex; background:var(--bg2); border-bottom:1px solid var(--line); height:35px; align-items:stretch; }
+.tab{ display:flex; align-items:center; gap:.5rem; padding:0 1rem; background:var(--ed-bg); border-right:1px solid var(--line); border-top:1px solid var(--accent); color:var(--strong); }
+.tab .d{ width:8px; height:8px; border-radius:50%; background:var(--warn); }
+.tab .tag{ font-size:11px; color:var(--dim); }
+.tabs .sp{ flex:1; }
+.tabs .tools{ display:flex; align-items:center; gap:.4rem; padding:0 .6rem; }
+.editor{ flex:1; min-height:0; display:flex; position:relative; background:var(--ed-bg); }
+.gutter{ width:56px; flex:none; overflow:hidden; background:var(--gutter-bg); color:var(--gutter); font:13px/20px ui-monospace,"Cascadia Code",Consolas,Menlo,monospace; text-align:right; padding:12px 14px 0 0; user-select:none; position:relative; }
+.gutter pre{ font:inherit; }
+.code{ position:relative; flex:1; min-width:0; overflow:hidden; }
+.code pre,.code textarea{ position:absolute; inset:0; margin:0; padding:12px 16px; border:0; font:13px/20px ui-monospace,"Cascadia Code",Consolas,Menlo,monospace; tab-size:2; white-space:pre; letter-spacing:0; }
+.code pre{ overflow:hidden; color:var(--ed-text); pointer-events:none; }
+.code pre code{ display:block; width:max-content; min-width:100%; font:inherit; }
+.code textarea{ background:transparent; color:transparent; caret-color:var(--ed-text); resize:none; outline:none; overflow:auto; }
+.code textarea::selection{ background:var(--ed-sel); color:transparent; }
+.curline{ position:absolute; left:0; right:0; height:20px; top:12px; background:var(--ed-line); pointer-events:none; }
+.tk-tag{ color:var(--t-tag); } .tk-attr{ color:var(--t-attr); } .tk-str{ color:var(--t-str); } .tk-com{ color:var(--t-com); font-style:italic; } .tk-pun{ color:var(--t-pun); } .tk-ent{ color:var(--t-ent); }
+
+/* ---------- status bar + toasts ---------- */
+#status{ grid-column:1 / -1; background:var(--status); color:#fff; display:flex; align-items:center; gap:1rem; padding:0 .8rem; font-size:12px; overflow:hidden; white-space:nowrap; }
+#status .sp{ flex:1; }
+#toasts{ position:fixed; right:14px; bottom:36px; display:flex; flex-direction:column; gap:.5rem; z-index:100; }
+.toast{ background:var(--bg3); border:1px solid var(--line); border-left:3px solid var(--accent); padding:.6rem .85rem; border-radius:6px; max-width:380px; box-shadow:0 6px 20px rgba(0,0,0,.28); }
+.toast.ok{ border-left-color:var(--ok); } .toast.bad{ border-left-color:var(--bad); } .toast.warn{ border-left-color:var(--warn); }
+
+@media (max-width:860px){
+  #app{ grid-template-columns:56px 1fr; }
+  .brand span,.nav button span,.folder>div,.side-foot .side-actions .lbl{ display:none; }
+  .nav .badge{ position:absolute; margin:0; transform:translate(14px,-10px); }
+  .thead{ display:none; }
+  .row{ grid-template-columns:56px 1fr 1fr; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Vault Admin</h1>
-  <p class="sub">Encrypts photos and site content in your browser. Nothing is uploaded anywhere, and the PIN is never saved.</p>
 
-  <!-- UNLOCK -->
-  <div class="card" id="unlockCard">
-    <h2>1. Enter the PIN</h2>
-    <div class="row">
-      <input type="password" id="pin" placeholder="PIN / password" autocomplete="off">
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="login-box">
+    <h1><svg class="i" data-icon="lock"></svg>Vault Admin</h1>
+    <p>Encrypts photos and site text in your browser. Nothing is uploaded and the PIN is never stored.</p>
+    <div class="stack">
+      <input type="password" id="pin" placeholder="PIN / password" autocomplete="off" autofocus>
       <input type="password" id="pin2" class="hide" placeholder="Type it again to confirm" autocomplete="off">
-      <button id="unlockBtn">Unlock tool</button>
+      <button class="btn primary" id="unlockBtn">Unlock</button>
     </div>
     <div class="msg" id="unlockMsg"></div>
-    <p class="small">It must be the same PIN the lock screen uses, otherwise the site cannot decrypt what you make here.</p>
-  </div>
-
-  <div id="tool" class="hide">
-    <div class="tabs">
-      <button class="tab on" data-tab="images">Photos</button>
-      <button class="tab" data-tab="content">Site text</button>
-    </div>
-
-    <!-- IMAGES -->
-    <div id="tab-images">
-      <div class="card">
-        <h2>2. Add photos</h2>
-        <div class="drop" id="drop">Drop photos here, or click to choose<br><span class="small">Files already named like <code>date3-7.jpg</code> are placed automatically. Others get the next free number in the group you pick.</span></div>
-        <input type="file" id="file" accept="image/*" multiple class="hide">
-        <div class="row" style="margin-top:.8rem">
-          <label class="small"><input type="checkbox" id="opt" checked> Shrink big photos (max 2400px, JPEG) so the site loads fast</label>
-        </div>
-        <div id="list"></div>
-        <div class="row" style="margin-top:1rem">
-          <button id="encBtn" disabled>Encrypt</button>
-          <span class="small" id="encInfo"></span>
-        </div>
-      </div>
-
-      <div class="card hide" id="outCard">
-        <h2>3. Put them in your repo</h2>
-        <div class="row">
-          <button id="zipBtn">Download all as .zip</button>
-          <button id="dirBtn" class="ghost">Save straight into my project folder</button>
-        </div>
-        <div class="msg" id="outMsg"></div>
-        <div class="results small" id="results"></div>
-        <p class="small" style="margin-top:.6rem">The zip contains <code>images/NAME.enc</code> files. Unzip it into the root of your repo (merging the <code>images</code> folder), then commit and push. New photos appear on the site on their own.</p>
-      </div>
-    </div>
-
-    <!-- CONTENT -->
-    <div id="tab-content" class="hide">
-      <div class="card">
-        <h2>Site text (the encrypted page body)</h2>
-        <p class="small" style="margin-bottom:.7rem">This is the HTML of the site itself, kept encrypted in <code>content.enc</code>. Load it, edit the words, then encrypt it again. Photo groups look like <code>&lt;div class="gallery-grid" data-group="date1" data-prefix="date1" data-alt="First date photo"&gt;&lt;/div&gt;</code>.</p>
-        <div class="row" style="margin-bottom:.7rem">
-          <button id="loadContent" class="ghost">Load current content.enc from site</button>
-          <button id="pickContent" class="ghost">Open a local .html file</button>
-          <input type="file" id="contentFile" accept=".html,.htm,text/html" class="hide">
-        </div>
-        <textarea id="contentText" spellcheck="false" placeholder="Content HTML appears here"></textarea>
-        <div class="row" style="margin-top:.8rem">
-          <button id="encContent">Encrypt and download content.enc</button>
-          <button id="dirContent" class="ghost">Save into project folder</button>
-        </div>
-        <div class="msg" id="contentMsg"></div>
-      </div>
-    </div>
   </div>
 </div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <aside id="side">
+    <div class="brand"><svg class="i" data-icon="shield"></svg><span>Vault Admin</span></div>
+    <nav class="nav">
+      <button data-tab="photos" class="on"><svg class="i" data-icon="image"></svg><span>Photos</span><em class="badge hide" id="photoBadge">0</em></button>
+      <button data-tab="content"><svg class="i" data-icon="code"></svg><span>Site text</span><i class="dot hide" id="contentDot"></i></button>
+    </nav>
+    <div class="side-foot">
+      <div class="folder" id="folderBox">
+        <svg class="i" data-icon="folder"></svg>
+        <div><div class="fname" id="fname">No folder linked</div><div class="fstate" id="fstate">Pick your project folder once</div></div>
+      </div>
+      <div class="side-actions">
+        <button class="btn sm" id="folderBtn"><svg class="i" data-icon="folder"></svg><span class="lbl">Choose folder</span></button>
+      </div>
+      <div class="side-actions">
+        <button class="btn sm ghost" id="themeBtn" title="Toggle light / dark"><svg class="i" data-icon="sun"></svg><span class="lbl">Theme</span></button>
+        <button class="btn sm ghost" id="lockBtn" title="Lock"><svg class="i" data-icon="lock"></svg><span class="lbl">Lock</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <section id="main">
+    <!-- PHOTOS -->
+    <div class="view" id="view-photos">
+      <div class="toolbar">
+        <span class="title">Photos</span>
+        <button class="btn" id="addBtn"><svg class="i" data-icon="plus"></svg>Add photos</button>
+        <button class="btn danger" id="clearBtn" disabled><svg class="i" data-icon="trash"></svg>Remove all</button>
+        <label class="chk"><input type="checkbox" id="opt" checked>Shrink large photos (max 2400px)</label>
+        <span class="sp"></span>
+        <span class="hint" id="encInfo" style="color:var(--dim)"></span>
+        <button class="btn" id="zipBtn" disabled><svg class="i" data-icon="download"></svg>Download .zip</button>
+        <button class="btn primary" id="savePhotos" disabled><svg class="i" data-icon="save"></svg>Save to project folder <span class="kbd">Ctrl S</span></button>
+        <input type="file" id="file" accept="image/*" multiple class="hide">
+      </div>
+      <div id="photoBody">
+        <div class="empty" id="emptyPhotos">
+          <svg class="i big" data-icon="image"></svg>
+          <h3>Drop photos anywhere on this page</h3>
+          <div>or use <b>Add photos</b>. A file named <code>date3-7.jpg</code> is placed as <code>date3-7</code> automatically.<br>Anything else gets the next free number in the group you choose.</div>
+        </div>
+        <div id="listWrap" class="hide">
+          <div class="thead"><span></span><span>File</span><span>Group</span><span></span><span>Number</span><span>Saves as</span><span></span></div>
+          <div id="list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SITE TEXT -->
+    <div class="view hide" id="view-content">
+      <div class="tabs">
+        <div class="tab"><svg class="i" data-icon="code"></svg><span>content.html</span><i class="d hide" id="tabDot"></i><span class="tag">saved encrypted as content.enc</span></div>
+        <span class="sp"></span>
+        <div class="tools">
+          <button class="btn sm ghost" id="reloadContent"><svg class="i" data-icon="refresh"></svg>Reload</button>
+          <button class="btn sm ghost" id="pickContent"><svg class="i" data-icon="file"></svg>Open .html</button>
+          <button class="btn sm ghost" id="dlContent"><svg class="i" data-icon="download"></svg>Download .enc</button>
+          <button class="btn sm primary" id="saveContent"><svg class="i" data-icon="save"></svg>Save to project folder <span class="kbd">Ctrl S</span></button>
+          <input type="file" id="contentFile" accept=".html,.htm,text/html" class="hide">
+        </div>
+      </div>
+      <div class="editor">
+        <div class="gutter" id="gutter"><pre id="nums">1</pre></div>
+        <div class="code" id="code">
+          <div class="curline" id="curline"></div>
+          <pre id="hl" aria-hidden="true"><code id="hlcode"></code></pre>
+          <textarea id="ta" spellcheck="false" wrap="off" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="status">
+    <span id="statusMsg">Ready</span>
+    <span class="sp"></span>
+    <span id="edStatus" class="hide"></span>
+    <span id="hintStatus">Ctrl+S saves to the project folder</span>
+  </footer>
+</div>
+<div id="toasts"></div>
 
 <script>
 /* Must match index.html. Both values are public on purpose (they are not secrets). */
 const KDF_SALT_HEX = 'f6728f85ab30fb54cde6fa39eff539d4';
 const KDF_ITERATIONS = 1000000;
-
 const GROUPS = ['main-photo','timeline-oct9','timeline-oct22','date1','date2','date3','date4','date5','date6'];
+
 const $ = id => document.getElementById(id);
 const hexToBytes = h => Uint8Array.from(h.match(/../g).map(b => parseInt(b, 16)));
-let key = null, encKey = null;           // decrypt key and encrypt key (same secret)
-const queue = [];                        // photos waiting to be encrypted
-let outputs = [];                        // [{path, data}]
-const siteMax = {};                      // cache: highest existing number per group
+let key = null;
+let queue = [];
+
+/* ---------- icons ---------- */
+const ICONS = {
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M21 16l-5-5-8 8"/>',
+  code:'<path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
+  folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  download:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+  save:'<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14-4M4 5v4h4M4 13a8 8 0 0 0 14 4M20 19v-4h-4"/>',
+  file:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>'
+};
+function iconify(root) { (root || document).querySelectorAll('svg[data-icon]').forEach(s => { s.setAttribute('viewBox', '0 0 24 24'); s.innerHTML = ICONS[s.dataset.icon] || ''; s.removeAttribute('data-icon'); s.classList.add('i'); }); }
+iconify();
+
+/* ---------- toasts / status ---------- */
+function toast(msg, kind, ms) {
+  const t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg;
+  $('toasts').appendChild(t); setTimeout(() => t.remove(), ms || 4500);
+  $('statusMsg').textContent = msg;
+}
+const setMsg = (el, text, cls) => { el.textContent = text; el.className = 'msg ' + (cls || ''); };
+
+/* ---------- theme ---------- */
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem('vault-theme', t); } catch (e) {}
+  const b = $('themeBtn').querySelector('svg'); b.innerHTML = ICONS[t === 'dark' ? 'sun' : 'moon'];
+}
+$('themeBtn').onclick = () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+applyTheme(document.documentElement.dataset.theme);
 
 /* ---------- crypto (same format as the site) ---------- */
 async function deriveKeys(pin) {
@@ -150,62 +316,144 @@ async function open(k, buf) {
   const ml = pt[0];
   return { mime: new TextDecoder().decode(pt.subarray(1, 1 + ml)), data: pt.subarray(1 + ml) };
 }
-const setMsg = (el, text, cls) => { el.textContent = text; el.className = 'msg ' + (cls || ''); };
+
+/* ======================================================================
+   PROJECT FOLDER (remembered between visits)
+   The folder handle is kept in IndexedDB. Browsers keep the permission
+   for the session, or permanently if you pick "Allow on every visit".
+   ====================================================================== */
+const canPickFolder = typeof window.showDirectoryPicker === 'function';
+let dirHandle = null;
+function idb() { return new Promise((res, rej) => { const r = indexedDB.open('vault-admin', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k) { const db = await idb(); return new Promise((res, rej) => { const r = db.transaction('kv').objectStore('kv').get(k); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbSet(k, v) { const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); }); }
+
+async function folderPerm() {
+  if (!dirHandle) return 'none';
+  try { return await dirHandle.queryPermission({ mode: 'readwrite' }); } catch (e) { return 'denied'; }
+}
+async function updateFolderUI() {
+  const p = await folderPerm(), box = $('folderBox'), btn = $('folderBtn').querySelector('.lbl');
+  box.classList.remove('ok', 'warn');
+  if (!dirHandle) { $('fname').textContent = 'No folder linked'; $('fstate').textContent = canPickFolder ? 'Pick your project folder once' : 'Not supported in this browser'; btn.textContent = 'Choose folder'; return; }
+  $('fname').textContent = dirHandle.name;
+  if (p === 'granted') { $('fstate').textContent = 'Connected'; box.classList.add('ok'); btn.textContent = 'Change folder'; }
+  else { $('fstate').textContent = 'Click Reconnect to allow access'; box.classList.add('warn'); btn.textContent = 'Reconnect'; }
+}
+async function pickFolder() {
+  const h = await showDirectoryPicker({ mode: 'readwrite', id: 'vault-project' });
+  let looksRight = false;
+  try { await h.getFileHandle('index.html'); looksRight = true; } catch (e) {}
+  if (!looksRight && !confirm('"' + h.name + '" does not contain an index.html. Use it anyway?')) throw new DOMException('cancelled', 'AbortError');
+  dirHandle = h; await idbSet('dir', h); await updateFolderUI();
+  siteCache = {}; existsCache = {};
+  return h;
+}
+/* Returns a writable folder handle. Call this FIRST in a click/keyboard handler,
+   before any slow work, because the browser only allows the permission prompt right after a user action. */
+async function ensureFolder() {
+  if (!canPickFolder) throw new Error('unsupported');
+  if (dirHandle) {
+    if ((await folderPerm()) === 'granted') return dirHandle;
+    try { if ((await dirHandle.requestPermission({ mode: 'readwrite' })) === 'granted') { await updateFolderUI(); return dirHandle; } } catch (e) {}
+  }
+  return pickFolder();
+}
+$('folderBtn').onclick = async () => {
+  try {
+    if (dirHandle && (await folderPerm()) !== 'granted') { await ensureFolder(); toast('Folder reconnected: ' + dirHandle.name, 'ok'); }
+    else { await pickFolder(); toast('Linked folder: ' + dirHandle.name, 'ok'); }
+  } catch (e) { if (e.name !== 'AbortError') toast('Could not link folder: ' + e.message, 'bad'); }
+};
+$('folderBox').onclick = () => { if (dirHandle && $('folderBox').classList.contains('warn')) $('folderBtn').click(); };
+
+async function folderFile(path) {
+  if (!dirHandle || (await folderPerm()) !== 'granted') return null;
+  try {
+    let d = dirHandle; const parts = path.split('/');
+    for (const s of parts.slice(0, -1)) d = await d.getDirectoryHandle(s);
+    return await (await d.getFileHandle(parts[parts.length - 1])).getFile();
+  } catch (e) { return null; }
+}
+/* newest local copy first (the folder), otherwise the hosted site */
+async function getProjectFile(path) {
+  const f = await folderFile(path);
+  if (f) return f.arrayBuffer();
+  try { const r = await fetch(path, { cache: 'no-cache' }); if (r.ok) return r.arrayBuffer(); } catch (e) {}
+  return null;
+}
+let existsCache = {}, siteCache = {};
+async function existsProject(path) {
+  if (path in existsCache) return existsCache[path];
+  let ok = false;
+  if ((await folderPerm()) === 'granted') ok = !!(await folderFile(path));
+  else { try { ok = (await fetch(path, { method: 'HEAD', cache: 'no-cache' })).ok; } catch (e) {} }
+  return (existsCache[path] = ok);
+}
+async function writeFiles(dir, files) {
+  for (const f of files) {
+    const parts = f.path.split('/'); let d = dir;
+    for (const s of parts.slice(0, -1)) d = await d.getDirectoryHandle(s, { create: true });
+    const w = await (await d.getFileHandle(parts[parts.length - 1], { create: true })).createWritable();
+    await w.write(f.data); await w.close();
+  }
+}
 
 /* ---------- unlock ---------- */
 let needConfirm = false;
-$('unlockBtn').onclick = async () => {
+async function unlock() {
   const msg = $('unlockMsg'), pin = $('pin').value;
   if (!pin) return setMsg(msg, 'Enter the PIN first.', 'bad');
-  if (!(window.crypto && crypto.subtle)) return setMsg(msg, 'This page needs https:// (or a local file) to use encryption.', 'bad');
+  if (!(window.crypto && crypto.subtle)) return setMsg(msg, 'This page needs https:// or a local file to use encryption.', 'bad');
   if (needConfirm && $('pin2').value !== pin) return setMsg(msg, 'The two entries do not match.', 'bad');
-  setMsg(msg, 'Working...', '');
-  $('unlockBtn').disabled = true;
+  $('unlockBtn').disabled = true; setMsg(msg, 'Unlocking...', '');
   try {
-    key = await deriveKeys(pin);
-    let verified = false;
-    try {
-      const r = await fetch('content.enc', { cache: 'no-cache' });
-      if (r.ok) {
-        try { await open(key, await r.arrayBuffer()); verified = true; }
-        catch (e) { setMsg(msg, 'That PIN does not match the one the site was encrypted with.', 'bad'); key = null; return; }
-      }
-    } catch (e) { /* not reachable, fall through */ }
-    if (!verified && !needConfirm) {
-      needConfirm = true; $('pin2').classList.remove('hide'); key = null;
-      return setMsg(msg, 'Could not reach content.enc to check the PIN. Type it again below to confirm, then press Unlock.', 'warn');
+    /* reconnect the saved folder while the click is still fresh */
+    if (dirHandle && (await folderPerm()) !== 'granted') { try { await dirHandle.requestPermission({ mode: 'readwrite' }); } catch (e) {} await updateFolderUI(); }
+    const k = await deriveKeys(pin);
+    const buf = await getProjectFile('content.enc');
+    if (buf) {
+      try { await open(k, buf); } catch (e) { return setMsg(msg, 'That PIN does not match the one the site was encrypted with.', 'bad'); }
+    } else if (!needConfirm) {
+      needConfirm = true; $('pin2').classList.remove('hide');
+      return setMsg(msg, 'Could not find content.enc to check the PIN. Link your project folder or type the PIN again below to confirm.', 'warn');
     }
-    $('unlockCard').classList.add('hide'); $('tool').classList.remove('hide');
-    if (!verified) setMsg($('encInfo'), 'PIN was not verified against the site. Double check it.', 'warn');
+    key = k; $('pin').value = $('pin2').value = '';
+    $('login').classList.add('hide'); $('app').classList.remove('hide');
+    $('statusMsg').textContent = buf ? 'PIN verified against content.enc' : 'PIN not verified. Double check it.';
+    loadContentFromProject(true);
   } finally { $('unlockBtn').disabled = false; }
+}
+$('unlockBtn').onclick = unlock;
+['pin', 'pin2'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); }));
+$('lockBtn').onclick = () => {
+  if ((contentDirty() || queue.length) && !confirm('You have unsaved work. Lock anyway?')) return;
+  location.reload();
 };
-$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlockBtn').click(); });
-$('pin2').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlockBtn').click(); });
 
 /* ---------- tabs ---------- */
-document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  $('tab-images').classList.toggle('hide', t.dataset.tab !== 'images');
-  $('tab-content').classList.toggle('hide', t.dataset.tab !== 'content');
-});
-
-/* ---------- queue ---------- */
-async function probeSiteMax(group) {
-  if (group in siteMax) return siteMax[group];
-  let n = 0;
-  try {
-    while (n < 200) {
-      const r = await fetch(`images/${group}-${n + 1}.enc`, { method: 'HEAD', cache: 'no-cache' });
-      if (!r.ok) break;
-      n++;
-    }
-  } catch (e) { n = 0; }
-  return (siteMax[group] = n);
+let currentTab = 'photos';
+function showTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  $('view-photos').classList.toggle('hide', t !== 'photos');
+  $('view-content').classList.toggle('hide', t !== 'content');
+  $('edStatus').classList.toggle('hide', t !== 'content');
+  if (t === 'content') { renderEditor(); $('ta').focus(); }
 }
+document.querySelectorAll('.nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+/* ======================================================================
+   PHOTOS
+   ====================================================================== */
 async function nextFree(group) {
-  const fromSite = await probeSiteMax(group);
+  if (!(group in siteCache)) {
+    let n = 0;
+    while (n < 300 && await existsProject(`images/${group}-${n + 1}.enc`)) n++;
+    siteCache[group] = n;
+  }
   const fromQueue = Math.max(0, ...queue.filter(q => q.group === group).map(q => q.num || 0));
-  return Math.max(fromSite, fromQueue) + 1;
+  return Math.max(siteCache[group], fromQueue) + 1;
 }
 const nameOf = q => `${q.group}-${q.num}`;
 
@@ -214,89 +462,125 @@ async function addFiles(files) {
     if (!file.type.startsWith('image/')) continue;
     const q = { file, url: URL.createObjectURL(file), group: 'main-photo', num: 1 };
     const m = file.name.match(/^(.+)-(\d+)\.[a-z0-9]+$/i);
-    if (m) { q.group = m[1]; q.num = parseInt(m[2], 10); }
-    else {
-      const last = queue.length ? queue[queue.length - 1].group : 'main-photo';
-      q.group = last; queue.push(q); q.num = await nextFree(last); queue.pop();
-    }
+    if (m) { q.group = m[1].replace(/[^a-z0-9-]/gi, '') || 'custom'; q.num = parseInt(m[2], 10); }
+    else { q.group = queue.length ? queue[queue.length - 1].group : 'main-photo'; q.num = await nextFree(q.group); }
     queue.push(q);
   }
   render();
+}
+function removeAll() {
+  if (!queue.length) return;
+  if (queue.length > 1 && !confirm(`Remove all ${queue.length} photos from the list?`)) return;
+  queue.forEach(q => URL.revokeObjectURL(q.url)); queue = []; render();
+  toast('List cleared');
 }
 
 function render() {
   const list = $('list'); list.innerHTML = '';
   const names = queue.map(nameOf);
+  const hasDup = new Set(names).size !== names.length;
+  $('emptyPhotos').classList.toggle('hide', queue.length > 0);
+  $('listWrap').classList.toggle('hide', !queue.length);
   queue.forEach((q, i) => {
     const known = GROUPS.includes(q.group);
-    const dup = names.indexOf(nameOf(q)) !== i || names.lastIndexOf(nameOf(q)) !== i;
-    const row = document.createElement('div'); row.className = 'item';
-    row.innerHTML = `<img src="${q.url}" alt="">
-      <div><div class="fields">
-        <select>${GROUPS.map(g => `<option value="${g}" ${g === q.group ? 'selected' : ''}>${g}</option>`).join('')}<option value="__custom" ${known ? '' : 'selected'}>custom...</option></select>
-        <input class="custom ${known ? 'hide' : ''}" placeholder="group name" value="${known ? '' : q.group}">
-        <span class="small">number</span><input type="number" min="1" value="${q.num}">
-        <span class="final">${nameOf(q)}.enc</span></div>
-        <div class="small ${dup ? 'bad' : ''}">${dup ? 'Two photos have the same name, change a number.' : q.file.name}</div></div>
-      <button class="ghost">Remove</button>`;
-    const [sel, cust, num] = row.querySelectorAll('select, input');
-    sel.onchange = async () => { if (sel.value === '__custom') { q.group = cust.value || 'custom'; } else { q.group = sel.value; queue.splice(i, 1); q.num = await nextFree(q.group); queue.splice(i, 0, q); } render(); };
+    const dup = names.indexOf(nameOf(q)) !== names.lastIndexOf(nameOf(q));
+    const row = document.createElement('div'); row.className = 'row' + (dup ? ' dup' : '');
+    row.innerHTML = `<img alt="">
+      <div class="fn"></div>
+      <div><select>${GROUPS.map(g => `<option value="${g}" ${g === q.group ? 'selected' : ''}>${g}</option>`).join('')}<option value="__custom" ${known ? '' : 'selected'}>custom...</option></select>
+        <input type="text" class="custom ${known ? 'hide' : ''}" placeholder="group name" value="${known ? '' : q.group}"></div>
+      <span></span>
+      <input type="number" min="1" value="${q.num}">
+      <div class="final">${nameOf(q)}.enc<small></small></div>
+      <button class="btn icon ghost" title="Remove"><svg data-icon="x"></svg></button>`;
+    row.querySelector('img').src = q.url;
+    row.querySelector('.fn').innerHTML = '';
+    const fn = row.querySelector('.fn'); fn.textContent = q.file.name; const sm = document.createElement('small'); sm.textContent = (q.file.size / 1024).toFixed(0) + ' KB'; fn.appendChild(sm);
+    const small = row.querySelector('.final small');
+    if (dup) { small.className = 'e'; small.textContent = 'Same name as another photo'; }
+    else existsProject(`images/${nameOf(q)}.enc`).then(ex => { if (ex && row.isConnected) { small.className = 'w'; small.textContent = 'Replaces an existing photo'; } });
+    const sel = row.querySelector('select'), cust = row.querySelector('input.custom'), num = row.querySelector('input[type=number]');
+    sel.onchange = async () => {
+      if (sel.value === '__custom') q.group = cust.value.trim() || 'custom';
+      else { q.group = sel.value; const keep = q.num; q.num = 0; q.num = await nextFree(q.group) || keep; }
+      render();
+    };
     cust.onchange = () => { q.group = cust.value.trim().replace(/[^a-z0-9-]/gi, '') || 'custom'; render(); };
     num.onchange = () => { q.num = Math.max(1, parseInt(num.value, 10) || 1); render(); };
-    row.querySelector('button').onclick = () => { queue.splice(i, 1); render(); };
+    row.querySelector('button').onclick = () => { URL.revokeObjectURL(q.url); queue.splice(i, 1); render(); };
     list.appendChild(row);
   });
-  const hasDup = new Set(names).size !== names.length;
-  $('encBtn').disabled = !queue.length || hasDup;
-  $('encInfo').textContent = queue.length ? `${queue.length} photo(s) ready` : '';
+  iconify(list);
+  $('clearBtn').disabled = !queue.length;
+  $('savePhotos').disabled = $('zipBtn').disabled = !queue.length || hasDup;
+  const b = $('photoBadge'); b.textContent = queue.length; b.classList.toggle('hide', !queue.length);
+  $('encInfo').textContent = queue.length ? `${queue.length} photo${queue.length > 1 ? 's' : ''} ready` : '';
 }
 
-const drop = $('drop');
-drop.onclick = () => $('file').click();
+$('addBtn').onclick = () => $('file').click();
+$('clearBtn').onclick = removeAll;
 $('file').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
-['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
-['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-drop.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
+const pb = $('photoBody');
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { if (currentTab === 'photos' && !$('app').classList.contains('hide')) { e.preventDefault(); dragDepth++; pb.classList.add('over'); } });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) pb.classList.remove('over'); });
+window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; pb.classList.remove('over'); if (currentTab === 'photos' && !$('app').classList.contains('hide')) addFiles([...e.dataTransfer.files]); });
 
-/* ---------- optional shrink ---------- */
 async function prepare(file) {
-  const MAX = 2400;
-  if (!$('opt').checked || file.type === 'image/gif' || file.type === 'image/svg+xml') return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' };
+  const raw = async () => ({ bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' });
+  if (!$('opt').checked || file.type === 'image/gif' || file.type === 'image/svg+xml') return raw();
   try {
-    const bmp = await createImageBitmap(file);
+    const MAX = 2400, bmp = await createImageBitmap(file);
     const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
-    if (scale === 1 && file.size < 2.5 * 1024 * 1024) return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' };
+    if (scale === 1 && file.size < 2.5 * 1024 * 1024) return raw();
     const c = document.createElement('canvas');
     c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
     c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
     const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
     return { bytes: new Uint8Array(await blob.arrayBuffer()), mime: 'image/jpeg' };
-  } catch (e) { return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' }; }
+  } catch (e) { return raw(); }
 }
-
-/* ---------- encrypt photos ---------- */
-$('encBtn').onclick = async () => {
-  $('encBtn').disabled = true; outputs = [];
-  let i = 0;
+async function encryptQueue() {
+  const out = []; let i = 0;
   for (const q of queue) {
     $('encInfo').textContent = `Encrypting ${++i} of ${queue.length}...`;
     const { bytes, mime } = await prepare(q.file);
-    outputs.push({ path: `images/${nameOf(q)}.enc`, data: await seal(key, bytes, mime) });
+    out.push({ path: `images/${nameOf(q)}.enc`, data: await seal(key, bytes, mime) });
   }
-  $('encInfo').textContent = 'Done.';
-  $('outCard').classList.remove('hide');
-  $('results').innerHTML = outputs.map((o, n) => `<div><a href="#" data-n="${n}">${o.path}</a> (${(o.data.length / 1024).toFixed(0)} KB)</div>`).join('');
-  $('results').querySelectorAll('a').forEach(a => a.onclick = e => { e.preventDefault(); download(outputs[+a.dataset.n].path.split('/').pop(), new Blob([outputs[+a.dataset.n].data])); });
-  setMsg($('outMsg'), '', '');
-  $('encBtn').disabled = false;
+  return out;
+}
+
+let saving = false;
+async function savePhotos() {
+  if (saving || !queue.length || $('savePhotos').disabled) return;
+  saving = true;
+  try {
+    let dir = null;
+    try { dir = await ensureFolder(); }                      /* first, while the user action is fresh */
+    catch (e) { if (e.name === 'AbortError') return; if (e.message !== 'unsupported') { toast('Could not open folder: ' + e.message, 'bad'); return; } }
+    const files = await encryptQueue();
+    if (!dir) { toast('This browser cannot write to folders, so a .zip was downloaded instead.', 'warn'); download('new-photos.zip', makeZip(files)); }
+    else {
+      await writeFiles(dir, files);
+      toast(`Saved ${files.length} photo${files.length > 1 ? 's' : ''} to ${dir.name}/images. Now commit and push.`, 'ok', 7000);
+    }
+    queue.forEach(q => URL.revokeObjectURL(q.url)); queue = []; siteCache = {}; existsCache = {};
+    render();
+  } catch (e) { toast('Save failed: ' + e.message, 'bad'); }
+  finally { saving = false; $('encInfo').textContent = queue.length ? `${queue.length} photos ready` : ''; }
+}
+$('savePhotos').onclick = savePhotos;
+$('zipBtn').onclick = async () => {
+  try { const files = await encryptQueue(); download('new-photos.zip', makeZip(files)); toast('Downloaded new-photos.zip. Unzip it into the repo root.', 'ok'); }
+  catch (e) { toast('Failed: ' + e.message, 'bad'); }
+  render();
 };
 
 function download(name, blob) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
-
-/* ---------- zip (store only, no compression needed) ---------- */
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
 function makeZip(files) {
@@ -318,42 +602,141 @@ function makeZip(files) {
   end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
   return new Blob([...parts, ...central, end], { type: 'application/zip' });
 }
-$('zipBtn').onclick = () => download('new-photos.zip', makeZip(outputs));
 
-/* ---------- save directly into the project folder (Chrome/Edge desktop) ---------- */
-async function saveToFolder(files, msgEl) {
-  if (!window.showDirectoryPicker) return setMsg(msgEl, 'Your browser cannot save to folders. Use the .zip instead (Chrome or Edge on desktop supports this option).', 'warn');
-  try {
-    const root = await showDirectoryPicker({ mode: 'readwrite' });
-    for (const f of files) {
-      const parts = f.path.split('/'); let dir = root;
-      for (const d of parts.slice(0, -1)) dir = await dir.getDirectoryHandle(d, { create: true });
-      const w = await (await dir.getFileHandle(parts[parts.length - 1], { create: true })).createWritable();
-      await w.write(f.data); await w.close();
-    }
-    setMsg(msgEl, `Saved ${files.length} file(s) into "${root.name}". Now commit and push.`, 'ok');
-  } catch (e) { if (e.name !== 'AbortError') setMsg(msgEl, 'Could not save: ' + e.message, 'bad'); }
+/* ======================================================================
+   SITE TEXT EDITOR (syntax highlighted, VS Code style)
+   ====================================================================== */
+const ta = $('ta'), hlcode = $('hlcode'), nums = $('nums'), gutter = $('gutter'), curline = $('curline');
+let savedText = '';
+const contentDirty = () => ta.value !== savedText;
+
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+const span = (c, s) => `<span class="tk-${c}">${esc(s)}</span>`;
+function tagHtml(t) {
+  const m = t.match(/^(<\/?)([^\s>\/]+)([\s\S]*?)(\/?>?)$/);
+  if (!m) return esc(t);
+  let attrs = '', re = /(\s+)|("[^"]*"|'[^']*')|(=)|([^\s="'<>\/]+)|([\s\S])/g, a;
+  while ((a = re.exec(m[3]))) {
+    if (a[1]) attrs += a[1]; else if (a[2]) attrs += span('str', a[2]); else if (a[3]) attrs += span('pun', a[3]);
+    else if (a[4]) attrs += span('attr', a[4]); else attrs += esc(a[5]);
+  }
+  return span('pun', m[1]) + span('tag', m[2]) + attrs + span('pun', m[4]);
 }
-$('dirBtn').onclick = () => saveToFolder(outputs, $('outMsg'));
+function highlight(src) {
+  const re = /<!--[\s\S]*?(?:-->|$)|<![A-Za-z][^>]*>?|<\/?[A-Za-z][^\s>\/]*(?:"[^"]*"|'[^']*'|[^>"'])*>?|&#?\w+;/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(src))) {
+    out += esc(src.slice(last, m.index));
+    const t = m[0];
+    if (t.startsWith('<!--')) out += span('com', t);
+    else if (t.startsWith('<!')) out += span('tag', t);
+    else if (t[0] === '&') out += span('ent', t);
+    else out += tagHtml(t);
+    last = m.index + t.length;
+  }
+  return out + esc(src.slice(last)) + '\n';
+}
+function renderEditor() {
+  hlcode.innerHTML = highlight(ta.value);
+  const n = ta.value.split('\n').length;
+  if (nums.dataset.n != n) { nums.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n'); nums.dataset.n = n; }
+  const d = contentDirty();
+  $('tabDot').classList.toggle('hide', !d); $('contentDot').classList.toggle('hide', !d);
+  syncScroll(); updateCursor();
+}
+function syncScroll() {
+  hlcode.style.transform = `translate(${-ta.scrollLeft}px,${-ta.scrollTop}px)`;
+  nums.style.transform = `translateY(${-ta.scrollTop}px)`;
+  updateCursor();
+}
+function updateCursor() {
+  const pos = ta.selectionStart, before = ta.value.slice(0, pos);
+  const ln = before.split('\n').length, col = pos - before.lastIndexOf('\n');
+  const sel = ta.selectionEnd - ta.selectionStart;
+  $('edStatus').textContent = `Ln ${ln}, Col ${col}${sel ? ` (${sel} selected)` : ''}   Spaces: 2   UTF-8   HTML`;
+  curline.style.transform = `translateY(${(ln - 1) * 20 - ta.scrollTop}px)`;
+  curline.classList.toggle('hide', ta.selectionStart !== ta.selectionEnd);
+}
+ta.addEventListener('input', renderEditor);
+ta.addEventListener('scroll', syncScroll);
+['keyup', 'click', 'select', 'focus'].forEach(ev => ta.addEventListener(ev, updateCursor));
+document.addEventListener('selectionchange', () => { if (document.activeElement === ta) updateCursor(); });
 
-/* ---------- site text ---------- */
-$('loadContent').onclick = async () => {
-  try {
-    const r = await fetch('content.enc', { cache: 'no-cache' });
-    if (!r.ok) throw new Error('content.enc not found next to this page');
-    $('contentText').value = new TextDecoder().decode((await open(key, await r.arrayBuffer())).data);
-    setMsg($('contentMsg'), 'Loaded.', 'ok');
-  } catch (e) { setMsg($('contentMsg'), 'Could not load: ' + e.message, 'bad'); }
-};
+function insertText(text) { if (!document.execCommand('insertText', false, text)) { const s = ta.selectionStart; ta.setRangeText(text, s, ta.selectionEnd, 'end'); renderEditor(); } }
+function replaceRange(s, e, text, selStart, selEnd) { ta.setSelectionRange(s, e); insertText(text); ta.setSelectionRange(selStart, selEnd); renderEditor(); }
+function lineBlock() {
+  const v = ta.value; let s = ta.selectionStart, e = ta.selectionEnd;
+  const ls = v.lastIndexOf('\n', s - 1) + 1;
+  if (e > s && v[e - 1] === '\n') e--;
+  let le = v.indexOf('\n', e); if (le < 0) le = v.length;
+  return { ls, le, text: v.slice(ls, le) };
+}
+function indentSel(outdent) {
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  if (s === e && !outdent) { insertText('  '); return; }
+  const b = lineBlock();
+  const nt = b.text.split('\n').map(l => outdent ? l.replace(/^ {1,2}/, '') : '  ' + l).join('\n');
+  replaceRange(b.ls, b.le, nt, b.ls, b.ls + nt.length);
+}
+function toggleComment() {
+  const b = lineBlock(), lines = b.text.split('\n');
+  const all = lines.filter(l => l.trim()).every(l => /^\s*<!-- .* -->\s*$/.test(l));
+  const nt = lines.map(l => !l.trim() ? l : all ? l.replace(/^(\s*)<!-- (.*) -->\s*$/, '$1$2') : l.replace(/^(\s*)(.*)$/, '$1<!-- $2 -->')).join('\n');
+  replaceRange(b.ls, b.le, nt, b.ls, b.ls + nt.length);
+}
+ta.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (e.key === 'Tab' && !mod) { e.preventDefault(); indentSel(e.shiftKey); }
+  else if (mod && e.key === '/') { e.preventDefault(); toggleComment(); }
+  else if (e.key === 'Enter' && !mod && !e.shiftKey && ta.selectionStart === ta.selectionEnd) {
+    e.preventDefault();
+    const v = ta.value, ls = v.lastIndexOf('\n', ta.selectionStart - 1) + 1;
+    insertText('\n' + (v.slice(ls, ta.selectionStart).match(/^[ \t]*/)[0]));
+  }
+});
+
+function setEditorText(text, asSaved) { ta.value = text; if (asSaved) savedText = text; ta.scrollTop = ta.scrollLeft = 0; renderEditor(); }
+async function loadContentFromProject(silent) {
+  const buf = await getProjectFile('content.enc');
+  if (!buf) { if (!silent) toast('content.enc was not found. Link your project folder first.', 'warn'); return; }
+  try { setEditorText(new TextDecoder().decode((await open(key, buf)).data), true); if (!silent) toast('Reloaded content.enc', 'ok'); }
+  catch (e) { toast('Could not decrypt content.enc with this PIN.', 'bad'); }
+}
+$('reloadContent').onclick = () => { if (contentDirty() && !confirm('Discard your unsaved edits and reload?')) return; loadContentFromProject(false); };
 $('pickContent').onclick = () => $('contentFile').click();
-$('contentFile').onchange = async e => { const f = e.target.files[0]; if (f) { $('contentText').value = await f.text(); setMsg($('contentMsg'), 'Loaded ' + f.name, 'ok'); } };
+$('contentFile').onchange = async e => { const f = e.target.files[0]; if (f) { setEditorText(await f.text(), false); toast('Opened ' + f.name + '. Save to encrypt it.', 'ok'); } e.target.value = ''; };
 async function sealContent() {
-  const text = $('contentText').value;
-  if (!text.trim()) { setMsg($('contentMsg'), 'Nothing to encrypt.', 'bad'); return null; }
-  return { path: 'content.enc', data: await seal(key, new TextEncoder().encode(text), 'text/html') };
+  if (!ta.value.trim()) { toast('There is nothing to encrypt.', 'bad'); return null; }
+  return { path: 'content.enc', data: await seal(key, new TextEncoder().encode(ta.value), 'text/html') };
 }
-$('encContent').onclick = async () => { const f = await sealContent(); if (f) { download('content.enc', new Blob([f.data])); setMsg($('contentMsg'), 'Replace content.enc in your repo with this file.', 'ok'); } };
-$('dirContent').onclick = async () => { const f = await sealContent(); if (f) saveToFolder([f], $('contentMsg')); };
+async function saveContent() {
+  if (saving) return; saving = true;
+  try {
+    let dir = null;
+    try { dir = await ensureFolder(); }
+    catch (e) { if (e.name === 'AbortError') return; if (e.message !== 'unsupported') { toast('Could not open folder: ' + e.message, 'bad'); return; } }
+    const f = await sealContent(); if (!f) return;
+    if (!dir) { download('content.enc', new Blob([f.data])); toast('This browser cannot write to folders, so content.enc was downloaded. Replace it in your repo.', 'warn'); }
+    else { await writeFiles(dir, [f]); toast(`Saved content.enc to ${dir.name}. Now commit and push.`, 'ok', 7000); }
+    savedText = ta.value; renderEditor();
+  } catch (e) { toast('Save failed: ' + e.message, 'bad'); }
+  finally { saving = false; }
+}
+$('saveContent').onclick = saveContent;
+$('dlContent').onclick = async () => { const f = await sealContent(); if (f) { download('content.enc', new Blob([f.data])); toast('Downloaded content.enc', 'ok'); } };
+
+/* ---------- global shortcuts ---------- */
+document.addEventListener('keydown', e => {
+  if ($('app').classList.contains('hide')) return;
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    if (currentTab === 'content') saveContent(); else savePhotos();
+  }
+});
+window.addEventListener('beforeunload', e => { if (key && (contentDirty() || queue.length)) { e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- boot ---------- */
+(async () => { try { dirHandle = (await idbGet('dir')) || null; } catch (e) { dirHandle = null; } await updateFolderUI(); render(); renderEditor(); })();
 </script>
 </body>
 </html>

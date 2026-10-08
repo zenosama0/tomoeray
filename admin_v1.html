@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Vault Admin</title>
+<style>
+  :root{ --bg:#150a26; --card:#241340; --card2:#2d1850; --line:rgba(217,184,240,.22); --txt:#f3e6fb; --dim:#d9b8f0; --gold:#e8c87e; --orchid:#9b5fc0; --ok:#8be0a4; --bad:#ff8a8a; --warn:#f3dca0; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--txt); line-height:1.5; padding:1.4rem; }
+  .wrap{ max-width:860px; margin:0 auto; }
+  h1{ font-size:1.5rem; margin-bottom:.2rem; }
+  h2{ font-size:1.05rem; margin-bottom:.6rem; color:var(--gold); }
+  p.sub{ color:var(--dim); font-size:.9rem; margin-bottom:1.2rem; }
+  .card{ background:linear-gradient(165deg,var(--card),var(--card2)); border:1px solid var(--line); border-radius:16px; padding:1.1rem 1.2rem; margin-bottom:1rem; }
+  input,select,textarea,button{ font:inherit; color:inherit; }
+  input,select,textarea{ background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:10px; padding:.5rem .7rem; outline:none; }
+  input:focus,select:focus,textarea:focus{ border-color:var(--orchid); }
+  select option{ background:#241340; }
+  button{ cursor:pointer; background:linear-gradient(160deg,#b87fe0,#5b2c8c); border:none; border-radius:10px; padding:.55rem 1rem; font-weight:600; }
+  button.ghost{ background:transparent; border:1px solid var(--line); }
+  button:disabled{ opacity:.4; cursor:not-allowed; }
+  .row{ display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
+  .msg{ font-size:.88rem; margin-top:.6rem; min-height:1.2rem; }
+  .ok{ color:var(--ok); } .bad{ color:var(--bad); } .warn{ color:var(--warn); }
+  .tabs{ display:flex; gap:.5rem; margin-bottom:1rem; }
+  .tab{ background:transparent; border:1px solid var(--line); }
+  .tab.on{ background:linear-gradient(160deg,#b87fe0,#5b2c8c); border-color:transparent; }
+  .drop{ border:2px dashed var(--line); border-radius:14px; padding:1.6rem; text-align:center; color:var(--dim); cursor:pointer; transition:.2s; }
+  .drop.over{ border-color:var(--gold); background:rgba(232,200,126,.07); }
+  .item{ display:grid; grid-template-columns:64px 1fr auto; gap:.8rem; align-items:center; padding:.7rem 0; border-top:1px solid var(--line); }
+  .item img{ width:64px; height:64px; object-fit:cover; border-radius:8px; background:#000; }
+  .item .fields{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
+  .item input[type=number]{ width:5.2rem; }
+  .item input.custom{ width:9rem; }
+  .final{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; color:var(--gold); }
+  .small{ font-size:.78rem; color:var(--dim); }
+  .hide{ display:none !important; }
+  textarea{ width:100%; min-height:340px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.8rem; }
+  code{ background:rgba(0,0,0,.3); padding:.05rem .35rem; border-radius:5px; }
+  .results a{ color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Vault Admin</h1>
+  <p class="sub">Encrypts photos and site content in your browser. Nothing is uploaded anywhere, and the PIN is never saved.</p>
+
+  <!-- UNLOCK -->
+  <div class="card" id="unlockCard">
+    <h2>1. Enter the PIN</h2>
+    <div class="row">
+      <input type="password" id="pin" placeholder="PIN / password" autocomplete="off">
+      <input type="password" id="pin2" class="hide" placeholder="Type it again to confirm" autocomplete="off">
+      <button id="unlockBtn">Unlock tool</button>
+    </div>
+    <div class="msg" id="unlockMsg"></div>
+    <p class="small">It must be the same PIN the lock screen uses, otherwise the site cannot decrypt what you make here.</p>
+  </div>
+
+  <div id="tool" class="hide">
+    <div class="tabs">
+      <button class="tab on" data-tab="images">Photos</button>
+      <button class="tab" data-tab="content">Site text</button>
+    </div>
+
+    <!-- IMAGES -->
+    <div id="tab-images">
+      <div class="card">
+        <h2>2. Add photos</h2>
+        <div class="drop" id="drop">Drop photos here, or click to choose<br><span class="small">Files already named like <code>date3-7.jpg</code> are placed automatically. Others get the next free number in the group you pick.</span></div>
+        <input type="file" id="file" accept="image/*" multiple class="hide">
+        <div class="row" style="margin-top:.8rem">
+          <label class="small"><input type="checkbox" id="opt" checked> Shrink big photos (max 2400px, JPEG) so the site loads fast</label>
+        </div>
+        <div id="list"></div>
+        <div class="row" style="margin-top:1rem">
+          <button id="encBtn" disabled>Encrypt</button>
+          <span class="small" id="encInfo"></span>
+        </div>
+      </div>
+
+      <div class="card hide" id="outCard">
+        <h2>3. Put them in your repo</h2>
+        <div class="row">
+          <button id="zipBtn">Download all as .zip</button>
+          <button id="dirBtn" class="ghost">Save straight into my project folder</button>
+        </div>
+        <div class="msg" id="outMsg"></div>
+        <div class="results small" id="results"></div>
+        <p class="small" style="margin-top:.6rem">The zip contains <code>images/NAME.enc</code> files. Unzip it into the root of your repo (merging the <code>images</code> folder), then commit and push. New photos appear on the site on their own.</p>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="tab-content" class="hide">
+      <div class="card">
+        <h2>Site text (the encrypted page body)</h2>
+        <p class="small" style="margin-bottom:.7rem">This is the HTML of the site itself, kept encrypted in <code>content.enc</code>. Load it, edit the words, then encrypt it again. Photo groups look like <code>&lt;div class="gallery-grid" data-group="date1" data-prefix="date1" data-alt="First date photo"&gt;&lt;/div&gt;</code>.</p>
+        <div class="row" style="margin-bottom:.7rem">
+          <button id="loadContent" class="ghost">Load current content.enc from site</button>
+          <button id="pickContent" class="ghost">Open a local .html file</button>
+          <input type="file" id="contentFile" accept=".html,.htm,text/html" class="hide">
+        </div>
+        <textarea id="contentText" spellcheck="false" placeholder="Content HTML appears here"></textarea>
+        <div class="row" style="margin-top:.8rem">
+          <button id="encContent">Encrypt and download content.enc</button>
+          <button id="dirContent" class="ghost">Save into project folder</button>
+        </div>
+        <div class="msg" id="contentMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Must match index.html. Both values are public on purpose (they are not secrets). */
+const KDF_SALT_HEX = 'f6728f85ab30fb54cde6fa39eff539d4';
+const KDF_ITERATIONS = 1000000;
+
+const GROUPS = ['main-photo','timeline-oct9','timeline-oct22','date1','date2','date3','date4','date5','date6'];
+const $ = id => document.getElementById(id);
+const hexToBytes = h => Uint8Array.from(h.match(/../g).map(b => parseInt(b, 16)));
+let key = null, encKey = null;           // decrypt key and encrypt key (same secret)
+const queue = [];                        // photos waiting to be encrypted
+let outputs = [];                        // [{path, data}]
+const siteMax = {};                      // cache: highest existing number per group
+
+/* ---------- crypto (same format as the site) ---------- */
+async function deriveKeys(pin) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+  const p = { name: 'PBKDF2', salt: hexToBytes(KDF_SALT_HEX), iterations: KDF_ITERATIONS, hash: 'SHA-256' };
+  return crypto.subtle.deriveKey(p, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+async function seal(k, bytes, mime) {
+  const m = new TextEncoder().encode(mime);
+  const pt = new Uint8Array(1 + m.length + bytes.length);
+  pt[0] = m.length; pt.set(m, 1); pt.set(bytes, 1 + m.length);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, pt));
+  const out = new Uint8Array(3 + 12 + ct.length);
+  out.set([82, 66, 49], 0); out.set(iv, 3); out.set(ct, 15);
+  return out;
+}
+async function open(k, buf) {
+  const u = new Uint8Array(buf);
+  if (u.length < 32 || u[0] !== 82 || u[1] !== 66 || u[2] !== 49) throw new Error('bad format');
+  const pt = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(3, 15) }, k, u.slice(15)));
+  const ml = pt[0];
+  return { mime: new TextDecoder().decode(pt.subarray(1, 1 + ml)), data: pt.subarray(1 + ml) };
+}
+const setMsg = (el, text, cls) => { el.textContent = text; el.className = 'msg ' + (cls || ''); };
+
+/* ---------- unlock ---------- */
+let needConfirm = false;
+$('unlockBtn').onclick = async () => {
+  const msg = $('unlockMsg'), pin = $('pin').value;
+  if (!pin) return setMsg(msg, 'Enter the PIN first.', 'bad');
+  if (!(window.crypto && crypto.subtle)) return setMsg(msg, 'This page needs https:// (or a local file) to use encryption.', 'bad');
+  if (needConfirm && $('pin2').value !== pin) return setMsg(msg, 'The two entries do not match.', 'bad');
+  setMsg(msg, 'Working...', '');
+  $('unlockBtn').disabled = true;
+  try {
+    key = await deriveKeys(pin);
+    let verified = false;
+    try {
+      const r = await fetch('content.enc', { cache: 'no-cache' });
+      if (r.ok) {
+        try { await open(key, await r.arrayBuffer()); verified = true; }
+        catch (e) { setMsg(msg, 'That PIN does not match the one the site was encrypted with.', 'bad'); key = null; return; }
+      }
+    } catch (e) { /* not reachable, fall through */ }
+    if (!verified && !needConfirm) {
+      needConfirm = true; $('pin2').classList.remove('hide'); key = null;
+      return setMsg(msg, 'Could not reach content.enc to check the PIN. Type it again below to confirm, then press Unlock.', 'warn');
+    }
+    $('unlockCard').classList.add('hide'); $('tool').classList.remove('hide');
+    if (!verified) setMsg($('encInfo'), 'PIN was not verified against the site. Double check it.', 'warn');
+  } finally { $('unlockBtn').disabled = false; }
+};
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlockBtn').click(); });
+$('pin2').addEventListener('keydown', e => { if (e.key === 'Enter') $('unlockBtn').click(); });
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  $('tab-images').classList.toggle('hide', t.dataset.tab !== 'images');
+  $('tab-content').classList.toggle('hide', t.dataset.tab !== 'content');
+});
+
+/* ---------- queue ---------- */
+async function probeSiteMax(group) {
+  if (group in siteMax) return siteMax[group];
+  let n = 0;
+  try {
+    while (n < 200) {
+      const r = await fetch(`images/${group}-${n + 1}.enc`, { method: 'HEAD', cache: 'no-cache' });
+      if (!r.ok) break;
+      n++;
+    }
+  } catch (e) { n = 0; }
+  return (siteMax[group] = n);
+}
+async function nextFree(group) {
+  const fromSite = await probeSiteMax(group);
+  const fromQueue = Math.max(0, ...queue.filter(q => q.group === group).map(q => q.num || 0));
+  return Math.max(fromSite, fromQueue) + 1;
+}
+const nameOf = q => `${q.group}-${q.num}`;
+
+async function addFiles(files) {
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    const q = { file, url: URL.createObjectURL(file), group: 'main-photo', num: 1 };
+    const m = file.name.match(/^(.+)-(\d+)\.[a-z0-9]+$/i);
+    if (m) { q.group = m[1]; q.num = parseInt(m[2], 10); }
+    else {
+      const last = queue.length ? queue[queue.length - 1].group : 'main-photo';
+      q.group = last; queue.push(q); q.num = await nextFree(last); queue.pop();
+    }
+    queue.push(q);
+  }
+  render();
+}
+
+function render() {
+  const list = $('list'); list.innerHTML = '';
+  const names = queue.map(nameOf);
+  queue.forEach((q, i) => {
+    const known = GROUPS.includes(q.group);
+    const dup = names.indexOf(nameOf(q)) !== i || names.lastIndexOf(nameOf(q)) !== i;
+    const row = document.createElement('div'); row.className = 'item';
+    row.innerHTML = `<img src="${q.url}" alt="">
+      <div><div class="fields">
+        <select>${GROUPS.map(g => `<option value="${g}" ${g === q.group ? 'selected' : ''}>${g}</option>`).join('')}<option value="__custom" ${known ? '' : 'selected'}>custom...</option></select>
+        <input class="custom ${known ? 'hide' : ''}" placeholder="group name" value="${known ? '' : q.group}">
+        <span class="small">number</span><input type="number" min="1" value="${q.num}">
+        <span class="final">${nameOf(q)}.enc</span></div>
+        <div class="small ${dup ? 'bad' : ''}">${dup ? 'Two photos have the same name, change a number.' : q.file.name}</div></div>
+      <button class="ghost">Remove</button>`;
+    const [sel, cust, num] = row.querySelectorAll('select, input');
+    sel.onchange = async () => { if (sel.value === '__custom') { q.group = cust.value || 'custom'; } else { q.group = sel.value; queue.splice(i, 1); q.num = await nextFree(q.group); queue.splice(i, 0, q); } render(); };
+    cust.onchange = () => { q.group = cust.value.trim().replace(/[^a-z0-9-]/gi, '') || 'custom'; render(); };
+    num.onchange = () => { q.num = Math.max(1, parseInt(num.value, 10) || 1); render(); };
+    row.querySelector('button').onclick = () => { queue.splice(i, 1); render(); };
+    list.appendChild(row);
+  });
+  const hasDup = new Set(names).size !== names.length;
+  $('encBtn').disabled = !queue.length || hasDup;
+  $('encInfo').textContent = queue.length ? `${queue.length} photo(s) ready` : '';
+}
+
+const drop = $('drop');
+drop.onclick = () => $('file').click();
+$('file').onchange = e => { addFiles([...e.target.files]); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => addFiles([...e.dataTransfer.files]));
+
+/* ---------- optional shrink ---------- */
+async function prepare(file) {
+  const MAX = 2400;
+  if (!$('opt').checked || file.type === 'image/gif' || file.type === 'image/svg+xml') return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' };
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, MAX / Math.max(bmp.width, bmp.height));
+    if (scale === 1 && file.size < 2.5 * 1024 * 1024) return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' };
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), mime: 'image/jpeg' };
+  } catch (e) { return { bytes: new Uint8Array(await file.arrayBuffer()), mime: file.type || 'image/jpeg' }; }
+}
+
+/* ---------- encrypt photos ---------- */
+$('encBtn').onclick = async () => {
+  $('encBtn').disabled = true; outputs = [];
+  let i = 0;
+  for (const q of queue) {
+    $('encInfo').textContent = `Encrypting ${++i} of ${queue.length}...`;
+    const { bytes, mime } = await prepare(q.file);
+    outputs.push({ path: `images/${nameOf(q)}.enc`, data: await seal(key, bytes, mime) });
+  }
+  $('encInfo').textContent = 'Done.';
+  $('outCard').classList.remove('hide');
+  $('results').innerHTML = outputs.map((o, n) => `<div><a href="#" data-n="${n}">${o.path}</a> (${(o.data.length / 1024).toFixed(0)} KB)</div>`).join('');
+  $('results').querySelectorAll('a').forEach(a => a.onclick = e => { e.preventDefault(); download(outputs[+a.dataset.n].path.split('/').pop(), new Blob([outputs[+a.dataset.n].data])); });
+  setMsg($('outMsg'), '', '');
+  $('encBtn').disabled = false;
+};
+
+function download(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ---------- zip (store only, no compression needed) ---------- */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const te = new TextEncoder(), parts = [], central = []; let offset = 0;
+  for (const f of files) {
+    const name = te.encode(f.path), crc = crc32(f.data), size = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(12, 0x21, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, name.length, true);
+    parts.push(lh, name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(14, 0x21, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(ch, name);
+    offset += 30 + name.length + size;
+  }
+  const cdSize = central.reduce((a, p) => a + p.byteLength, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, end], { type: 'application/zip' });
+}
+$('zipBtn').onclick = () => download('new-photos.zip', makeZip(outputs));
+
+/* ---------- save directly into the project folder (Chrome/Edge desktop) ---------- */
+async function saveToFolder(files, msgEl) {
+  if (!window.showDirectoryPicker) return setMsg(msgEl, 'Your browser cannot save to folders. Use the .zip instead (Chrome or Edge on desktop supports this option).', 'warn');
+  try {
+    const root = await showDirectoryPicker({ mode: 'readwrite' });
+    for (const f of files) {
+      const parts = f.path.split('/'); let dir = root;
+      for (const d of parts.slice(0, -1)) dir = await dir.getDirectoryHandle(d, { create: true });
+      const w = await (await dir.getFileHandle(parts[parts.length - 1], { create: true })).createWritable();
+      await w.write(f.data); await w.close();
+    }
+    setMsg(msgEl, `Saved ${files.length} file(s) into "${root.name}". Now commit and push.`, 'ok');
+  } catch (e) { if (e.name !== 'AbortError') setMsg(msgEl, 'Could not save: ' + e.message, 'bad'); }
+}
+$('dirBtn').onclick = () => saveToFolder(outputs, $('outMsg'));
+
+/* ---------- site text ---------- */
+$('loadContent').onclick = async () => {
+  try {
+    const r = await fetch('content.enc', { cache: 'no-cache' });
+    if (!r.ok) throw new Error('content.enc not found next to this page');
+    $('contentText').value = new TextDecoder().decode((await open(key, await r.arrayBuffer())).data);
+    setMsg($('contentMsg'), 'Loaded.', 'ok');
+  } catch (e) { setMsg($('contentMsg'), 'Could not load: ' + e.message, 'bad'); }
+};
+$('pickContent').onclick = () => $('contentFile').click();
+$('contentFile').onchange = async e => { const f = e.target.files[0]; if (f) { $('contentText').value = await f.text(); setMsg($('contentMsg'), 'Loaded ' + f.name, 'ok'); } };
+async function sealContent() {
+  const text = $('contentText').value;
+  if (!text.trim()) { setMsg($('contentMsg'), 'Nothing to encrypt.', 'bad'); return null; }
+  return { path: 'content.enc', data: await seal(key, new TextEncoder().encode(text), 'text/html') };
+}
+$('encContent').onclick = async () => { const f = await sealContent(); if (f) { download('content.enc', new Blob([f.data])); setMsg($('contentMsg'), 'Replace content.enc in your repo with this file.', 'ok'); } };
+$('dirContent').onclick = async () => { const f = await sealContent(); if (f) saveToFolder([f], $('contentMsg')); };
+</script>
+</body>
+</html>
