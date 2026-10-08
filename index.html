@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1b0f2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Lock Screen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=Caveat:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ================= SITE THEME ================= */
+
+/* main theme */
+:root{
+  --plum-midnight:#150a26;
+  --plum-deep:#241340;
+  --plum-card:#2d1850;
+  --amethyst:#5b2c8c;
+  --orchid:#9b5fc0;
+  --orchid-bright:#b87fe0;
+  --lilac:#d9b8f0;
+  --lilac-pale:#f3e6fb;
+  --gold:#e8c87e;
+  --gold-soft:#f3dca0;
+  --blush:#f0a8c4;
+  --white-soft:#fdf9ff;
+  --ink:#1b0f2e;
+
+  --font-display:'Cormorant Garamond', serif;
+  --font-hand:'Caveat', cursive;
+  --font-body:'Quicksand', sans-serif;
+
+  --container-w: 520px;
+  --edge: 1.4rem;
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+
+  --glow: 0 0 60px rgba(155,95,192,0.35);
+  --shadow-card: 0 18px 40px -12px rgba(10,4,24,0.55);
+  --ease: cubic-bezier(.22,.85,.34,1);
+}
+
+/* base */
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+body{
+  font-family:var(--font-body);
+  background:var(--plum-midnight);
+  color:var(--lilac-pale);
+  overflow-x:hidden;
+  min-height:100vh;
+  line-height:1.6;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; border:none; background:none; cursor:pointer; color:inherit; }
+h1,h2,h3{ font-family:var(--font-display); font-weight:600; line-height:1.15; }
+::selection{ background:var(--orchid); color:var(--white-soft); }
+
+/* custom scrollbar */
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-track{ background:var(--plum-midnight); }
+::-webkit-scrollbar-thumb{ background:linear-gradient(var(--orchid),var(--amethyst)); border-radius:10px; }
+
+:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; border-radius:4px; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important; }
+}
+
+/* Background (pretty stuff) */
+#bg-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  z-index:0; pointer-events:none;
+}
+
+/* Preload */
+#preloader{
+  position:fixed; inset:0; z-index:99999;
+  background:var(--plum-midnight);
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  gap:1rem;
+  transition:opacity .7s var(--ease), visibility .7s var(--ease);
+}
+#preloader.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+.loader-bloom{
+  width:54px; height:54px; position:relative;
+}
+.loader-bloom span{
+  position:absolute; inset:0; margin:auto;
+  width:14px; height:24px; border-radius:50% 50% 50% 50%;
+  background:linear-gradient(var(--orchid-bright), var(--amethyst));
+  transform-origin:bottom center;
+  animation:petal-spin 1.4s linear infinite;
+  opacity:.85;
+}
+.loader-bloom span:nth-child(1){ transform:rotate(0deg); animation-delay:0s; }
+.loader-bloom span:nth-child(2){ transform:rotate(60deg); animation-delay:-.23s; }
+.loader-bloom span:nth-child(3){ transform:rotate(120deg); animation-delay:-.46s; }
+.loader-bloom span:nth-child(4){ transform:rotate(180deg); animation-delay:-.7s; }
+.loader-bloom span:nth-child(5){ transform:rotate(240deg); animation-delay:-.93s; }
+.loader-bloom span:nth-child(6){ transform:rotate(300deg); animation-delay:-1.16s; }
+@keyframes petal-spin{
+  0%,100%{ opacity:.35; transform:scale(.7) rotate(var(--r,0deg)); }
+  50%{ opacity:1; transform:scale(1) rotate(var(--r,0deg)); }
+}
+.loader-text{ font-family:var(--font-hand); font-size:1.2rem; color:var(--lilac); letter-spacing:.5px; }
+
+/* #progress-bar{
+  position:fixed; top:0; left:0; height:3px; width:0%;
+  background:linear-gradient(90deg, var(--orchid), var(--gold), var(--blush));
+  z-index:9000; transition:width .1s linear;
+} */
+
+
+/* shared layout for containers */
+.container{
+  max-width:var(--container-w); margin:0 auto; padding:0 var(--edge);
+  position:relative; z-index:2;
+}
+#main-site{ position:relative; z-index:1; }
+section{ position:relative; padding:4.5rem 0; overflow:hidden; }
+
+.eyebrow{
+  font-family:var(--font-hand); font-size:1.15rem; color:var(--gold-soft);
+  display:inline-block; margin-bottom:.3rem;
+}
+.section-title{
+  font-size:clamp(1.7rem, 7vw, 2.3rem); font-style:italic;
+  background:linear-gradient(135deg, var(--white-soft), var(--lilac));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  margin-bottom:.6rem;
+}
+.section-lede{ font-size:.92rem; color:var(--lilac); opacity:.8; max-width:38ch; }
+
+.divider{
+  width:100%; display:flex; justify-content:center; margin:0 auto;
+  opacity:.7;
+}
+
+/* reveal-on-scroll */
+.reveal{ opacity:0; transform:translateY(28px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+.reveal.in-view{ opacity:1; transform:translateY(0); }
+
+/* super hero */
+#home{
+  min-height:100svh; display:flex; align-items:center; justify-content:center;
+  text-align:center; padding-top:3rem; padding-bottom:3rem;
+}
+.hero-eyebrow{
+  font-family:var(--font-hand); font-size:1.3rem; color:var(--gold-soft);
+}
+.hero-title{
+  font-size:clamp(2.4rem, 11vw, 3.4rem);
+  margin:.4rem 0 .8rem;
+}
+.hero-title .line1{ display:block; font-style:normal; color:var(--lilac-pale); font-size:.5em; letter-spacing:2px; text-transform:uppercase; font-family:var(--font-body); font-weight:600; opacity:.8;}
+.hero-title .name-placeholder{
+  display:block; font-style:italic;
+  background:linear-gradient(135deg, var(--gold-soft), var(--orchid-bright) 60%, var(--blush));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 18px rgba(155,95,192,0.45));
+}
+.hero-sub{
+  font-size:.95rem; color:var(--lilac); opacity:.85; max-width:32ch; margin:0 auto 2rem;
+}
+.hero-emoji-row{ font-size:1.4rem; letter-spacing:.4rem; margin-bottom:1.6rem; }
+
+.stats-strip{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem;
+  background:linear-gradient(160deg, rgba(155,95,192,0.18), rgba(45,24,80,0.4));
+  border:1px solid rgba(217,184,240,0.2);
+  border-radius:var(--radius-md);
+  padding:1rem .5rem;
+  margin-bottom:2.2rem;
+}
+.stat-num{ font-family:var(--font-display); font-weight:700; font-size:1.3rem; color:var(--white-soft); font-variant-numeric:tabular-nums;}
+.stat-label{ font-size:.55rem; text-transform:uppercase; letter-spacing:1px; color:var(--lilac); opacity:.7; margin-top:.2rem;}
+.stats-caption{ font-family:var(--font-hand); font-size:1rem; color:var(--lilac); opacity:.8; display:block; margin-top:-1.4rem; margin-bottom:2rem;}
+
+.scroll-cue{
+  display:inline-flex; flex-direction:column; align-items:center; gap:.4rem;
+  font-size:.7rem; letter-spacing:2px; text-transform:uppercase; color:var(--lilac); opacity:.65;
+}
+.scroll-cue .chevron{
+  width:14px; height:14px; border-right:2px solid var(--gold); border-bottom:2px solid var(--gold);
+  transform:rotate(45deg); animation:bob 1.8s ease-in-out infinite;
+}
+@keyframes bob{ 0%,100%{ transform:rotate(45deg) translate(0,0); } 50%{ transform:rotate(45deg) translate(4px,4px);} }
+
+/* my letter for wifey part */
+.letter-card{
+  background:linear-gradient(165deg, rgba(155,95,192,0.16), rgba(45,24,80,0.55));
+  border:1px solid rgba(217,184,240,0.22);
+  border-radius:var(--radius-lg);
+  padding:2rem 1.6rem;
+  box-shadow:var(--shadow-card);
+  position:relative;
+}
+.letter-card::before{
+  content:"❝";
+  position:absolute; top:-18px; left:22px;
+  font-family:var(--font-display); font-size:3rem; color:var(--gold);
+  opacity:.6;
+}
+.letter-text{
+  font-size:1rem; color:var(--lilac-pale); opacity:.92;
+  white-space:pre-line;
+}
+.letter-text .placeholder-hint{
+  color:var(--gold-soft); font-style:italic; opacity:.85; font-size:.9rem; display:block;
+}
+.letter-sign{
+  margin-top:1.4rem; text-align:right; font-family:var(--font-hand); font-size:1.4rem; color:var(--gold-soft);
+}
+
+/* photo frames and galleries */
+.gallery-grid{
+  display:grid; grid-template-columns:repeat(2, 1fr); gap:.9rem;
+}
+.gallery-grid.cols-2{ grid-template-columns:repeat(2,1fr); }
+
+/* "Our Dates" gallery — 3 columns x 2 rows, 6 photos */
+.gallery-grid.cols-3{
+  grid-template-columns:repeat(3, 1fr);
+  gap:.55rem;
+}
+.gallery-grid.cols-3 .photo-frame{ padding:5px 5px 13px; }
+.gallery-grid.cols-3 .photo-placeholder svg{ width:18px; height:18px; }
+.gallery-grid.cols-3 .ph-filename{ font-size:.5rem; padding:1px 4px; letter-spacing:-0.2px; }
+
+.photo-frame{
+  position:relative; border-radius:var(--radius-sm);
+  background:var(--white-soft); padding:8px 8px 22px;
+  box-shadow:0 12px 24px -8px rgba(10,4,24,0.6);
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease);
+  cursor:pointer;
+}
+.gallery-grid > .photo-frame:nth-child(odd){ transform:rotate(-2.5deg); }
+.gallery-grid > .photo-frame:nth-child(even){ transform:rotate(2.5deg); }
+.photo-frame:active{ transform:scale(.96) rotate(0deg) !important; }
+
+.photo-inner{
+  position:relative; width:100%; aspect-ratio:1/1; overflow:hidden;
+  border-radius:6px; background:var(--plum-deep);
+}
+.gallery-photo{ width:100%; height:100%; object-fit:cover; }
+
+.photo-placeholder{
+  display:none; position:absolute; inset:0;
+  flex-direction:column; align-items:center; justify-content:center; gap:.4rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(155,95,192,0.18), rgba(155,95,192,0.18) 8px, rgba(45,24,80,0.5) 8px, rgba(45,24,80,0.5) 16px);
+  border:1.5px dashed rgba(217,184,240,0.5);
+  text-align:center; padding:.5rem;
+}
+.photo-frame.missing .photo-placeholder{ display:flex; }
+.photo-frame.missing .gallery-photo{ display:none; }
+.photo-frame.missing{ cursor:default; }
+.photo-placeholder svg{ width:26px; height:26px; opacity:.6; }
+.ph-filename{
+  font-size:.62rem; color:var(--lilac-pale); opacity:.75;
+  background:rgba(0,0,0,0.25); padding:2px 6px; border-radius:6px;
+  font-family:monospace; word-break:break-all;
+}
+
+.heart-burst{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; font-size:3rem; opacity:0; z-index:5;
+}
+.heart-burst.pop{ animation:heart-pop .8s var(--ease); }
+@keyframes heart-pop{
+  0%{ opacity:0; transform:scale(.3); }
+  35%{ opacity:1; transform:scale(1.15); }
+  100%{ opacity:0; transform:scale(1.5) translateY(-12px); }
+}
+
+/* our timeline sections */
+.timeline-track{
+  position:relative; padding-left:1.6rem;
+}
+.timeline-track::before{
+  content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px;
+  background:linear-gradient(var(--orchid-bright), var(--gold), var(--blush));
+  opacity:.5; border-radius:2px;
+}
+.timeline-entry{ position:relative; margin-bottom:2.6rem; }
+.timeline-entry:last-child{ margin-bottom:0; }
+.timeline-entry::before{
+  content:""; position:absolute; left:-1.6rem; top:6px;
+  width:12px; height:12px; border-radius:50%;
+  background:var(--gold); box-shadow:0 0 0 4px rgba(232,200,126,0.2), 0 0 14px rgba(232,200,126,0.6);
+}
+.timeline-date{
+  font-family:var(--font-hand); font-size:1.35rem; color:var(--gold-soft);
+}
+.timeline-caption{
+  font-size:.85rem; color:var(--lilac); opacity:.8; margin:.25rem 0 .9rem;
+}
+.timeline-strip{
+  display:flex; gap:.8rem; overflow-x:auto; padding-bottom:.4rem;
+  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+}
+.timeline-strip::-webkit-scrollbar{ height:5px; }
+.timeline-strip .photo-frame{
+  flex:0 0 132px; scroll-snap-align:start;
+}
+.timeline-strip .photo-inner{ aspect-ratio:3/4; }
+
+/* our dates section */
+.date-block{ margin-bottom:3.6rem; }
+.date-block:last-child{ margin-bottom:0; }
+.date-tag{
+  display:inline-flex; align-items:center; gap:.4rem;
+  font-size:.65rem; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--ink); background:linear-gradient(120deg, var(--gold-soft), var(--blush));
+  padding:.3rem .7rem; border-radius:20px; font-weight:700; margin-bottom:.6rem;
+}
+.date-title{
+  font-size:1.5rem; font-style:italic; color:var(--white-soft); margin-bottom:.3rem;
+}
+.date-when{
+  font-family:var(--font-hand); font-size:1.15rem; color:var(--lilac); opacity:.85; margin-bottom:1rem; display:block;
+}
+.date-para{
+  font-size:.9rem; color:var(--lilac-pale); opacity:.85; margin-bottom:1.3rem;
+  border-left:2px solid rgba(217,184,240,0.3); padding-left:.9rem;
+}
+.date-para .placeholder-hint{ color:var(--gold-soft); font-style:italic; opacity:.85; }
+
+/* Bottom part */
+footer{
+  text-align:center; padding:3.5rem 1.4rem 3rem;
+  position:relative;
+}
+.footer-flourish{ opacity:.6; margin-bottom:1rem; }
+.footer-text{
+  font-family:var(--font-hand); font-size:1.5rem; color:var(--lilac);
+}
+.footer-text strong{ color:var(--gold-soft); font-weight:700; }
+.footer-sub{ font-size:.7rem; opacity:.45; margin-top:.6rem; letter-spacing:1px; text-transform:uppercase; }
+
+#back-to-top{
+  position:fixed; bottom:18px; right:14px; z-index:500;
+  width:42px; height:42px; border-radius:50%;
+  background:linear-gradient(160deg, var(--orchid-bright), var(--amethyst));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 10px 24px -6px rgba(91,44,140,0.7);
+  opacity:0; transform:translateY(10px) scale(.8); pointer-events:none;
+  transition:all .4s var(--ease);
+}
+#back-to-top.show{ opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+#back-to-top svg{ width:18px; height:18px; }
+
+/* img lightbox */
+#lightbox{
+  position:fixed; inset:0; z-index:9500;
+  background:rgba(10,4,20,0.92); backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transition:opacity .35s var(--ease), visibility .35s var(--ease);
+  padding:1.2rem;
+}
+#lightbox.open{ opacity:1; visibility:visible; }
+#lightbox img{
+  max-width:100%; max-height:78vh; border-radius:10px;
+  box-shadow:0 30px 60px -10px rgba(0,0,0,0.7);
+}
+.lb-close, .lb-prev, .lb-next{
+  position:absolute; color:var(--white-soft); width:42px; height:42px;
+  border-radius:50%; background:rgba(255,255,255,0.08);
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+}
+.lb-close{ top:18px; right:18px; }
+.lb-prev{ left:10px; top:50%; transform:translateY(-50%); }
+.lb-next{ right:10px; top:50%; transform:translateY(-50%); }
+
+/* flex stuff to adapt to devices (was a pain in the ass to set up, but worth it) */
+@media (max-width:340px){
+  :root{ --edge:1rem; }
+  }
+@media (min-width:680px){
+  :root{ --container-w:600px; }
+  .gallery-grid{ grid-template-columns:repeat(3,1fr); }
+  .timeline-strip .photo-frame{ flex-basis:170px; }
+}
+
+[hidden]{ display:none !important; }
+[data-prefix]:empty:not(.loaded){ min-height:140px; }
+
+/* ================= LOCK SCREEN ================= */
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    :root {
+      --android-font: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+      --ios-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+      --mac-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    }
+
+    body.locked {
+      line-height: normal;
+      font-family: var(--ios-font);
+      overflow: hidden;
+      background: #000;
+      color: white;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+    }
+
+    /* Wallpaper */
+    .wallpaper {
+      position: fixed;
+      inset: -20px;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.15s ease-out;
+      will-change: transform;
+    }
+    
+    .wallpaper::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.5) 100%);
+      pointer-events: none;
+    }
+
+    /* Shared */
+    .platform-container {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+      will-change: transform, opacity;
+    }
+    .platform-container.active { display: flex; }
+    .platform-container.swiping { transition: none; }
+
+    /* Status Bar */
+    .status-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1.25rem 0;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 5;
+      pointer-events: none;
+    }
+    
+    .status-icons { display: flex; align-items: center; gap: 0.35rem; }
+    
+    .battery-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+    
+    .battery {
+      width: 22px;
+      height: 11px;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      border-radius: 3px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 1.5px;
+    }
+    
+    .battery::after {
+      content: '';
+      position: absolute;
+      right: -3.5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2px;
+      height: 5px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 0 1px 1px 0;
+    }
+    
+    .battery-level {
+      height: 100%;
+      background: white;
+      border-radius: 1px;
+      width: 75%;
+    }
+    
+    .signal-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.5px;
+      height: 12px;
+    }
+    
+    .signal-bar {
+      width: 2.5px;
+      background: white;
+      border-radius: 1px;
+    }
+    
+    .signal-bar:nth-child(1) { height: 4px; }
+    .signal-bar:nth-child(2) { height: 6px; }
+    .signal-bar:nth-child(3) { height: 8px; }
+    .signal-bar:nth-child(4) { height: 12px; }
+
+    /* ANDROID */
+    #android-lock {
+      font-family: var(--android-font);
+      justify-content: space-between;
+      padding: 0.5rem 0 2.5rem;
+    }
+    
+    .android-clock {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    
+    .android-time {
+      font-size: 5.5rem;
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+    
+    .android-date {
+      font-size: 1rem;
+      margin-top: 0.75rem;
+      opacity: 0.85;
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+    
+    .android-swipe-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .android-swipe-track {
+      width: 120px;
+      height: 4px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .android-swipe-fill {
+      height: 100%;
+      width: 0%;
+      background: rgba(255,255,255,0.9);
+      border-radius: 2px;
+      transition: width 0.1s;
+    }
+    
+    .android-swipe-text {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.5) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2.5s linear infinite;
+    }
+
+    /* iOS */
+    #ios-lock {
+      font-family: var(--ios-font);
+      padding-top: 3rem;
+      align-items: center;
+    }
+    
+    .ios-clock {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    
+    .ios-time {
+      font-size: 5.5rem;
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.2);
+    }
+    
+    .ios-date {
+      font-size: 1.125rem;
+      margin-top: 0.5rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.85;
+    }
+    
+    .ios-swipe-area {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .ios-swipe-text {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.5) 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2.5s linear infinite;
+    }
+    
+    .ios-chevron {
+      font-size: 0.75rem;
+      opacity: 0.6;
+      animation: bounce-y 2s ease-in-out infinite;
+    }
+
+    /* macOS */
+    #macos-lock {
+      font-family: var(--mac-font);
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .macos-time {
+      font-size: 6rem;
+      font-weight: 200;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    }
+    
+    .macos-date {
+      font-size: 1.35rem;
+      margin-top: 0.75rem;
+      font-weight: 400;
+      opacity: 0.9;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+    
+    .macos-hint {
+      position: absolute;
+      bottom: 3rem;
+      font-size: 0.8rem;
+      opacity: 0.5;
+      font-weight: 400;
+      animation: pulse 3s ease-in-out infinite;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      transition: background 0.3s, opacity 0.3s;
+    }
+    
+    .macos-hint:hover { background: rgba(255,255,255,0.1); opacity: 0.8; }
+
+    /* PIN Overlays */
+    .pin-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(12, 6, 24, 0.94);
+      backdrop-filter: blur(28px) saturate(1.2);
+      -webkit-backdrop-filter: blur(28px) saturate(1.2);
+      display: none;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    }
+    
+    .pin-overlay.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .pin-overlay.swiping { transition: none; }
+    
+    .pin-content {
+      width: 100%;
+      max-width: 360px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem;
+    }
+    
+    .pin-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    
+    .pin-title {
+      font-size: 1.15rem;
+      font-weight: 500;
+      opacity: 0.9;
+      letter-spacing: 0.02em;
+    }
+    
+    .pin-dots {
+      display: flex;
+      gap: 1.25rem;
+    }
+    
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .pin-dot.filled {
+      background: white;
+      border-color: white;
+      transform: scale(1.15);
+      box-shadow: 0 0 10px rgba(255,255,255,0.45), 0 0 4px rgba(255,255,255,0.8);
+    }
+    
+    .pin-error {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #ff8a8a;
+      opacity: 0;
+      transition: opacity 0.3s;
+      min-height: 1.25rem;
+    }
+    
+    .pin-error.show { opacity: 1; }
+
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem 1.25rem;
+      width: 100%;
+      max-width: 300px;
+    }
+    
+    .pin-key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: white;
+      font-size: 1.6rem;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.12s;
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+    }
+    
+    .pin-key:active {
+      background: rgba(255,255,255,0.2);
+      transform: scale(0.92);
+    }
+    
+    .pin-key::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .pin-key:active::after { opacity: 1; }
+    
+    .pin-key.zero { grid-column: 2; }
+    
+    .pin-actions {
+      display: flex;
+      gap: 1rem;
+      width: 100%;
+      max-width: 300px;
+    }
+    
+    .pin-btn {
+      flex: 1;
+      padding: 0.9rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+    
+    .pin-btn.backspace {
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 1.3rem;
+    }
+    
+    .pin-btn.backspace:active { color: white; transform: scale(0.95); }
+    
+    .pin-btn.submit {
+      background: white;
+      color: #1a0b2e;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .pin-btn.submit:active { transform: scale(0.95); box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    
+    .pin-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .cooldown-text {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      font-weight: 500;
+    }
+
+    /* macOS Password Overlay */
+    .macos-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(40px) saturate(1.1);
+      -webkit-backdrop-filter: blur(40px) saturate(1.1);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .macos-overlay.active { display: flex; opacity: 1; }
+    
+    .macos-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      border: 3px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    
+    .macos-avatar:active { transform: scale(0.95); }
+    
+    .macos-name {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .macos-input-wrap {
+      position: relative;
+      width: 260px;
+    }
+    
+    .macos-input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.12);
+      color: white;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+    
+    .macos-input:focus {
+      border-color: rgba(139, 92, 246, 0.6);
+      background: rgba(255,255,255,0.18);
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+    }
+    
+    .macos-input::placeholder { color: rgba(255,255,255,0.4); }
+    
+    .macos-error {
+      color: #ff9f9f;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-weight: 500;
+    }
+    
+    .macos-error.show { opacity: 1; }
+    
+    .macos-cooldown {
+      font-size: 0.8rem;
+      opacity: 0.6;
+      margin-top: 0.5rem;
+      font-weight: 500;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    
+    @keyframes bounce-y {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+    
+    @keyframes slide-up {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes fade-in {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes shimmer {
+      to { background-position: 200% center; }
+    }
+    
+    .anim-shake { animation: shake 0.5s ease-in-out; }
+    .anim-slide-up { animation: slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+    .anim-fade-in { animation: fade-in 0.4s ease-out; }
+
+    /* Responsive */
+    @media (max-height: 700px) {
+      .android-time { font-size: 4rem; }
+      .ios-time { font-size: 4.5rem; }
+      .macos-time { font-size: 4.5rem; }
+      .pin-content { gap: 1.25rem; }
+      .pin-key { font-size: 1.4rem; }
+      .pin-pad { gap: 0.75rem 1rem; }
+    }
+    
+    @media (min-width: 1024px) {
+      .macos-time { font-size: 7rem; }
+      .macos-date { font-size: 1.5rem; }
+    }
+  
+    .pin-dots.busy .pin-dot { animation: pulse 0.7s ease-in-out infinite; }
+    .pin-dots.busy .pin-dot:nth-child(2) { animation-delay: .1s; }
+    .pin-dots.busy .pin-dot:nth-child(3) { animation-delay: .2s; }
+    .pin-dots.busy .pin-dot:nth-child(4) { animation-delay: .3s; }
+    .pin-dots.busy .pin-dot:nth-child(5) { animation-delay: .4s; }
+    .pin-dots.busy .pin-dot:nth-child(6) { animation-delay: .5s; }
+    .pin-dots { flex-wrap: nowrap; }
+    @media (max-width: 360px) { .pin-dots { gap: 0.9rem; } }
+
+</style>
+</head>
+<body class="locked">
+
+<div id="lock-ui">
+<!-- WALLPAPERS -->
+  <div class="wallpaper" id="wp-android" style="background-image: url('./images/android.png'); display: none;"></div>
+  <div class="wallpaper" id="wp-ios" style="background-image: url('./images/iphone.png'); display: none;"></div>
+  <div class="wallpaper" id="wp-macos" style="background-image: url('./images/desktop.png'); display: none;"></div>
+
+  <!-- ANDROID LOCK SCREEN -->
+  <div id="android-lock" class="platform-container">
+    <div class="status-bar">
+      <span id="a-status-time">12:00</span>
+      <div class="status-icons">
+        <div class="signal-bars">
+          <div class="signal-bar"></div>
+          <div class="signal-bar"></div>
+          <div class="signal-bar"></div>
+          <div class="signal-bar"></div>
+        </div>
+        <span> </span>
+        <div class="battery-wrap">
+          <span style="font-size:0.75rem; opacity:0.9;">75</span>
+          <div class="battery"><div class="battery-level"></div></div>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="android-clock">
+      <div class="android-time" id="a-time">12:00</div>
+      <div class="android-date" id="a-date">Mon, Jan 1</div>
+    </div>
+
+    <div class="android-swipe-area">
+      <div class="android-swipe-track">
+        <div class="android-swipe-fill" id="a-swipe-fill"></div>
+      </div>
+      <div class="android-swipe-text">Swipe up to unlock</div>
+    </div>
+  </div>
+
+  <!-- Android PIN -->
+  <div id="a-pin" class="pin-overlay">
+    <div class="pin-content">
+      <div class="pin-header">
+        <div class="pin-title">Enter PIN</div>
+        <div class="pin-dots" id="a-dots"></div>
+        <div class="pin-error" id="a-error">Wrong PIN. Try again.</div>
+      </div>
+      <div class="pin-pad" id="a-pad"></div>
+      <div class="pin-actions">
+        <button class="pin-btn backspace" id="a-back" disabled>⌫</button>
+        <button class="pin-btn submit" id="a-ok">OK</button>
+      </div>
+      <div class="cooldown-text" id="a-cool"></div>
+    </div>
+  </div>
+
+  <!-- iOS LOCK SCREEN -->
+  <div id="ios-lock" class="platform-container">
+    <div class="status-bar">
+      <span id="i-status-time" style="font-weight:600;">12:00</span>
+      <div class="status-icons">
+        <span></span>
+        <span></span>
+        <div class="battery-wrap">
+          <div class="battery"><div class="battery-level"></div></div>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ios-clock">
+      <div class="ios-time" id="i-time">12:00</div>
+      <div class="ios-date" id="i-date">Monday, January 1</div>
+    </div>
+
+    <div class="ios-swipe-area">
+      <div class="ios-swipe-text">Swipe up to unlock</div>
+      <div class="ios-chevron"><b>___</b></div>
+    </div>
+  </div>
+
+  <!-- iOS PIN -->
+  <div id="i-pin" class="pin-overlay">
+    <div class="pin-content">
+      <div class="pin-header">
+        <div class="pin-title">Enter PIN</div>
+        <div class="pin-dots" id="i-dots"></div>
+        <div class="pin-error" id="i-error">Wrong PIN. Try again.</div>
+      </div>
+      <div class="pin-pad" id="i-pad"></div>
+      <div class="pin-actions">
+        <button class="pin-btn backspace" id="i-back" disabled>⌫</button>
+        <button class="pin-btn submit" id="i-ok">OK</button>
+      </div>
+      <div class="cooldown-text" id="i-cool"></div>
+    </div>
+  </div>
+
+  <!-- macOS LOCK SCREEN -->
+  <div id="macos-lock" class="platform-container">
+    <div class="macos-time" id="m-time">12:00</div>
+    <div class="macos-date" id="m-date">Monday, January 1</div>
+    <div class="macos-hint" id="m-hint">Press Enter or click to unlock</div>
+  </div>
+
+  <div id="m-overlay" class="macos-overlay">
+    <div class="macos-avatar">👤</div>
+    <div class="macos-name">Tomoe</div>
+    <div class="macos-input-wrap">
+      <input type="password" class="macos-input" id="m-input" placeholder="Password" autocomplete="off">
+    </div>
+    <div class="macos-error" id="m-error">Incorrect password</div>
+    <div class="macos-cooldown" id="m-cool"></div>
+  </div>
+</div>
+
+<!-- shown right after a correct PIN while the site is being built -->
+<div id="preloader" class="hide" aria-hidden="true">
+  <div class="loader-bloom">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div class="loader-text">wrapping something up for my wifey . . .</div>
+</div>
+
+<!-- Everything below is empty until the PIN decrypts content.enc -->
+<div id="app" hidden>
+  <canvas id="bg-canvas"></canvas>
+  <main id="main-site"></main>
+
+  <button id="back-to-top" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <div id="lightbox">
+    <button class="lb-close" aria-label="Close">✕</button>
+    <button class="lb-prev" aria-label="Previous">‹</button>
+    <img id="lb-img" src="" alt="">
+    <button class="lb-next" aria-label="Next">›</button>
+  </div>
+</div>
+
+<script>
+
+    /* ═══════════════════════════════════════
+       VAULT: key derivation + decryption
+       The PIN is never stored anywhere. It is only used to derive
+       an AES key. A wrong PIN simply fails to decrypt content.enc.
+       ═══════════════════════════════════════ */
+    const KDF_SALT_HEX = 'f6728f85ab30fb54cde6fa39eff539d4';
+    const KDF_ITERATIONS = 1000000;
+    const hexToBytes = h => Uint8Array.from(h.match(/../g).map(b => parseInt(b, 16)));
+
+    let vaultKey = null;
+    let busy = false;
+    let unlocked = false;
+    let clockTimer = null;
+
+    async function deriveKey(pin) {
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: hexToBytes(KDF_SALT_HEX), iterations: KDF_ITERATIONS, hash: 'SHA-256' },
+        base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+      );
+    }
+
+    // file layout: 'RB1' | 12 byte IV | AES-GCM( [mimeLen][mime][bytes] )
+    async function openBlob(key, buf) {
+      const u = new Uint8Array(buf);
+      if (u.length < 32 || u[0] !== 82 || u[1] !== 66 || u[2] !== 49) throw new Error('bad format');
+      const pt = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(3, 15) }, key, u.slice(15)));
+      const ml = pt[0];
+      return { mime: new TextDecoder().decode(pt.subarray(1, 1 + ml)), data: pt.subarray(1 + ml) };
+    }
+
+    function setBusy(on) {
+      busy = on;
+      document.querySelectorAll('.pin-dots').forEach(d => d.classList.toggle('busy', on));
+      const mi = document.getElementById('m-input');
+      if (mi) { mi.disabled = on; mi.placeholder = on ? 'Unlocking...' : 'Password'; if (!on && platform === 'macos') mi.focus(); }
+    }
+
+    function flashMessage(msg) {
+      const el = platform === 'android' ? document.getElementById('a-error')
+               : platform === 'ios' ? document.getElementById('i-error')
+               : document.getElementById('m-error');
+      const old = el.textContent;
+      el.textContent = msg; el.classList.add('show');
+      setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.textContent = old, 300); }, 3500);
+    }
+
+    async function tryUnlock(pin) {
+      if (busy || unlocked || !pin) return;
+      setBusy(true);
+      try {
+        if (!(window.crypto && crypto.subtle)) throw new Error('nocrypto');
+        const key = await deriveKey(pin);
+        let res;
+        try { res = await fetch('content.enc', { cache: 'no-cache' }); } catch (e) { throw new Error('net'); }
+        if (!res.ok) throw new Error('net');
+        const buf = await res.arrayBuffer();
+        let content;
+        try { content = await openBlob(key, buf); } catch (e) { throw new Error('wrong'); }
+        vaultKey = key;
+        await onUnlocked(new TextDecoder().decode(content.data));
+      } catch (err) {
+        setBusy(false);
+        if (err.message === 'wrong') handlePinError();
+        else if (err.message === 'nocrypto') { pinBuffer = ''; renderDots(); flashMessage('Needs a secure (https) connection'); }
+        else { pinBuffer = ''; renderDots(); flashMessage("Couldn't load. Check your connection."); }
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       AFTER UNLOCK: build the site from decrypted content
+       ═══════════════════════════════════════ */
+    async function onUnlocked(html) {
+      unlocked = true;
+      resetState();
+      pinBuffer = '';
+      const pre = document.getElementById('preloader');
+      pre.classList.remove('hide');
+      await new Promise(r => setTimeout(r, 450));
+
+      clearInterval(clockTimer);
+      document.getElementById('lock-ui').remove();
+      document.body.classList.remove('locked');
+      document.body.classList.add('unlocked');
+      document.title = 'Happy Birthday \u{1F49C}';
+      document.getElementById('main-site').innerHTML = html;
+      document.getElementById('app').hidden = false;
+      window.scrollTo(0, 0);
+
+      initSite();
+      await new Promise(r => setTimeout(r, 650));
+      pre.classList.add('hide');
+      launchConfetti();
+    }
+
+    /* ═══════════════════════════════════════
+       ENCRYPTED PHOTOS
+       Each group (data-prefix="date1") loads date1-1.enc, date1-2.enc ...
+       until it runs out, so new photos appear without touching the HTML.
+       ═══════════════════════════════════════ */
+    async function fetchPhoto(name) {
+      try {
+        const r = await fetch('images/' + name + '.enc');
+        if (!r.ok) return null;
+        const { mime, data } = await openBlob(vaultKey, await r.arrayBuffer());
+        return URL.createObjectURL(new Blob([data], { type: mime }));
+      } catch (e) { return null; }
+    }
+
+    function addFrame(group, url, alt) {
+      const f = document.createElement('div');
+      f.className = 'photo-frame';
+      f.innerHTML = '<div class="photo-inner"><img class="gallery-photo" decoding="async"></div>';
+      const img = f.querySelector('img');
+      img.alt = alt; img.src = url;
+      group.appendChild(f);
+    }
+
+    async function loadGroup(group) {
+      const prefix = group.dataset.prefix, alt = group.dataset.alt || 'Photo';
+      const BATCH = 4;
+      let n = 1;
+      while (n < 200) {
+        const nums = Array.from({ length: BATCH }, (_, i) => n + i);
+        const urls = await Promise.all(nums.map(i => fetchPhoto(prefix + '-' + i)));
+        urls.forEach((u, i) => { if (u) addFrame(group, u, alt + ' ' + nums[i]); });
+        if (!urls[BATCH - 1]) break;
+        n += BATCH;
+      }
+      group.classList.add('loaded');
+    }
+
+    /* ═══════════════════════════════════════
+       SITE BEHAVIOUR (runs once, after unlock)
+       ═══════════════════════════════════════ */
+    const FIRST_DATE = new Date('2025-10-10T07:00:00Z');
+
+    function launchConfetti() {
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:fixed;inset:0;z-index:9990;pointer-events:none;';
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+      const colors = ['#9b5fc0', '#e8c87e', '#f0a8c4', '#d9b8f0', '#ffffff'];
+      const pieces = Array.from({ length: 110 }, () => ({
+        x: Math.random() * canvas.width, y: -20 - Math.random() * canvas.height * 0.5,
+        w: 6 + Math.random() * 6, h: 8 + Math.random() * 10,
+        vy: 2 + Math.random() * 3, vx: (Math.random() - 0.5) * 2.5,
+        rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      }));
+      let frame = 0;
+      (function tick() {
+        frame++;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+          ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        if (frame < 240) requestAnimationFrame(tick); else canvas.remove();
+      })();
+    }
+
+    function startBackground() {
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+      let w, h, stars = [], petals = [], looping = false;
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+      function initParticles() {
+        stars = Array.from({ length: 50 }, () => ({
+          x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.4 + 0.3,
+          phase: Math.random() * Math.PI * 2, speed: 0.015 + Math.random() * 0.02
+        }));
+        petals = Array.from({ length: 14 }, () => ({
+          x: Math.random() * w, y: Math.random() * h, r: Math.random() * 3 + 2,
+          vy: 0.15 + Math.random() * 0.25, vx: (Math.random() - 0.5) * 0.3,
+          hue: Math.random() > 0.5 ? '155,95,192' : '232,200,126', rot: Math.random() * Math.PI
+        }));
+      }
+      resize(); initParticles();
+      window.addEventListener('resize', () => { resize(); initParticles(); });
+      function loop() {
+        if (document.hidden) { looping = false; return; }
+        ctx.clearRect(0, 0, w, h);
+        stars.forEach(s => {
+          s.phase += s.speed;
+          const tw = (Math.sin(s.phase) + 1) / 2;
+          ctx.beginPath(); ctx.fillStyle = `rgba(217,184,240,${0.15 + tw * 0.5})`;
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+        });
+        if (!reduceMotion) {
+          petals.forEach(p => {
+            p.y += p.vy; p.x += p.vx; p.rot += 0.004;
+            if (p.y > h + 10) { p.y = -10; p.x = Math.random() * w; }
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            ctx.beginPath(); ctx.fillStyle = `rgba(${p.hue},0.35)`;
+            ctx.ellipse(0, 0, p.r, p.r * 1.6, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+          });
+        }
+        requestAnimationFrame(loop);
+      }
+      function start() { if (!looping) { looping = true; loop(); } }
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) start(); });
+      start();
+    }
+
+    function updateTogetherStats() {
+      const diff = Math.max(0, new Date() - FIRST_DATE);
+      const vals = {
+        'stat-days': Math.floor(diff / 86400000),
+        'stat-hours': Math.floor((diff % 86400000) / 3600000),
+        'stat-mins': Math.floor((diff % 3600000) / 60000),
+        'stat-secs': Math.floor((diff % 60000) / 1000)
+      };
+      for (const id in vals) { const el = document.getElementById(id); if (el) el.textContent = vals[id]; }
+    }
+
+    function initSite() {
+      startBackground();
+      updateTogetherStats();
+      setInterval(updateTogetherStats, 1000);
+
+      // back to top
+      const backToTop = document.getElementById('back-to-top');
+      window.addEventListener('scroll', () => backToTop.classList.toggle('show', window.scrollY > window.innerHeight * 0.8), { passive: true });
+      backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // fade-in on scroll
+      const revealObserver = new IntersectionObserver(entries => {
+        entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in-view'); revealObserver.unobserve(en.target); } });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+      document.querySelectorAll('.date-block, #gallery .gallery-grid').forEach(el => { el.classList.add('reveal'); revealObserver.observe(el); });
+
+      // photo groups load (and decrypt) when they come near the screen
+      const groupObserver = new IntersectionObserver(entries => {
+        entries.forEach(en => { if (en.isIntersecting) { groupObserver.unobserve(en.target); loadGroup(en.target); } });
+      }, { rootMargin: '700px 0px' });
+      document.querySelectorAll('[data-prefix]').forEach(g => groupObserver.observe(g));
+
+      // double tap = heart, single tap = lightbox
+      const lightbox = document.getElementById('lightbox');
+      const lbImg = document.getElementById('lb-img');
+      let lbGroup = [], lbIndex = 0, lastTap = 0, tapTimer = null;
+
+      function showLb(delta) {
+        lbIndex = (lbIndex + delta + lbGroup.length) % lbGroup.length;
+        lbImg.src = lbGroup[lbIndex].src; lbImg.alt = lbGroup[lbIndex].alt;
+      }
+      function openLightbox(group, index) {
+        lbGroup = group; lbIndex = index;
+        lbImg.src = lbGroup[lbIndex].src; lbImg.alt = lbGroup[lbIndex].alt;
+        lightbox.classList.add('open');
+      }
+      const closeLightbox = () => lightbox.classList.remove('open');
+
+      document.getElementById('main-site').addEventListener('click', e => {
+        const frame = e.target.closest('.photo-frame');
+        if (!frame) return;
+        const inner = frame.querySelector('.photo-inner');
+        const now = Date.now();
+        if (now - lastTap < 400) {
+          clearTimeout(tapTimer);
+          let burst = inner.querySelector('.heart-burst');
+          if (!burst) { burst = document.createElement('div'); burst.className = 'heart-burst'; burst.textContent = '\u{1F49C}'; inner.appendChild(burst); }
+          burst.classList.remove('pop'); void burst.offsetWidth; burst.classList.add('pop');
+          lastTap = 0;
+          return;
+        }
+        lastTap = now;
+        tapTimer = setTimeout(() => {
+          const imgs = Array.from(frame.parentElement.querySelectorAll('.gallery-photo'));
+          openLightbox(imgs, imgs.indexOf(frame.querySelector('img')));
+        }, 280);
+      });
+
+      document.querySelector('.lb-close').addEventListener('click', closeLightbox);
+      document.querySelector('.lb-prev').addEventListener('click', () => showLb(-1));
+      document.querySelector('.lb-next').addEventListener('click', () => showLb(1));
+      lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+      document.addEventListener('keydown', e => {
+        if (!lightbox.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') showLb(-1);
+        if (e.key === 'ArrowRight') showLb(1);
+      });
+      let touchStartX = 0;
+      lightbox.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].clientX, { passive: true });
+      lightbox.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) showLb(dx > 0 ? -1 : 1);
+      }, { passive: true });
+    }
+
+
+    /* CONFIG */
+    const PIN_LENGTH = 6;   // how many digits the keypad expects (the PIN itself is NOT stored here)
+
+    const MAX_ATTEMPTS = 5;
+    const COOLDOWN_SEC = 30;
+
+    /* STATE */
+    let attempts = parseInt(localStorage.getItem('ls_attempts') || '0');
+    let lockoutEnd = parseInt(localStorage.getItem('ls_lockout') || '0');
+    let pinBuffer = '';
+    let platform = detectPlatform();
+
+    function detectPlatform() {
+      const ua = navigator.userAgent;
+      if (/android/i.test(ua)) return 'android';
+      if (/iphone|ipad|ipod/i.test(ua)) return 'ios';
+      return 'macos';
+    }
+
+    /* CLOCK */
+    function updateClock() {
+      const now = new Date();
+      const t = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const d1 = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      const d2 = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      document.getElementById('a-time').textContent = t;
+      document.getElementById('a-date').textContent = d2;
+      document.getElementById('a-status-time').textContent = t;
+
+      document.getElementById('i-time').textContent = t;
+      document.getElementById('i-date').textContent = d1;
+      document.getElementById('i-status-time').textContent = t;
+
+      document.getElementById('m-time').textContent = t;
+      document.getElementById('m-date').textContent = d1;
+    }
+
+    /* WALLPAPER & PARALLAX */
+    function initWallpaper() {
+      const wpMap = { android: 'wp-android', ios: 'wp-ios', macos: 'wp-macos' };
+      document.getElementById(wpMap[platform]).style.display = 'block';
+
+      if (platform === 'macos') {
+        document.addEventListener('mousemove', e => {
+          const x = (e.clientX / window.innerWidth - 0.5) * -16;
+          const y = (e.clientY / window.innerHeight - 0.5) * -16;
+          document.querySelectorAll('.wallpaper').forEach(w => {
+            w.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+          });
+        });
+      } else {
+        document.addEventListener('touchmove', e => {
+          const x = (e.touches[0].clientX / window.innerWidth - 0.5) * -10;
+          const y = (e.touches[0].clientY / window.innerHeight - 0.5) * -10;
+          document.querySelectorAll('.wallpaper').forEach(w => {
+            w.style.transform = `translate(${x}px, ${y}px) scale(1.05)`;
+          });
+        }, { passive: true });
+        
+        document.addEventListener('touchend', () => {
+          document.querySelectorAll('.wallpaper').forEach(w => {
+            w.style.transform = 'translate(0,0) scale(1)';
+          });
+        });
+      }
+    }
+
+    /* UTILS */
+    function isLockedOut() { return Date.now() < lockoutEnd; }
+
+    function saveState() {
+      localStorage.setItem('ls_attempts', attempts.toString());
+      if (lockoutEnd) localStorage.setItem('ls_lockout', lockoutEnd.toString());
+      else localStorage.removeItem('ls_lockout');
+    }
+
+    function resetState() {
+      attempts = 0; lockoutEnd = 0;
+      localStorage.removeItem('ls_attempts');
+      localStorage.removeItem('ls_lockout');
+    }
+
+    function vibrate(pattern) {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    }
+
+    /* COOLDOWN */
+    function startCooldown() {
+      const els = [
+        document.getElementById('a-cool'),
+        document.getElementById('i-cool'),
+        document.getElementById('m-cool')
+      ];
+      const btns = document.querySelectorAll('.pin-btn, .macos-input');
+
+      function tick() {
+        const left = Math.ceil((lockoutEnd - Date.now()) / 1000);
+        if (left > 0) {
+          els.forEach(e => { if (e) e.textContent = `Try again in ${left}s`; });
+          btns.forEach(b => b.disabled = true);
+          setTimeout(tick, 1000);
+        } else {
+          els.forEach(e => { if (e) e.textContent = ''; });
+          btns.forEach(b => b.disabled = false);
+          attempts = 0; lockoutEnd = 0;
+          saveState();
+        }
+      }
+      tick();
+    }
+
+    function checkCooldown() {
+      if (isLockedOut()) startCooldown();
+      else if (attempts >= MAX_ATTEMPTS) { attempts = 0; saveState(); }
+    }
+
+    /* ═══════════════════════════════════════
+       SWIPE ANYWHERE (Android + iOS)
+       ═══════════════════════════════════════ */
+    function initSwipe() {
+      const container = platform === 'android' ? document.getElementById('android-lock') : document.getElementById('ios-lock');
+      const swipeFill = document.getElementById('a-swipe-fill');
+      const iosSwipe = document.querySelector('.ios-swipe-area');
+      let sy = 0, tracking = false;
+
+      container.addEventListener('touchstart', e => {
+        sy = e.touches[0].clientY;
+        tracking = true;
+        container.classList.add('swiping');
+      }, { passive: true });
+
+      container.addEventListener('touchmove', e => {
+        if (!tracking) return;
+        const dy = sy - e.touches[0].clientY;
+        if (dy > 0) {
+          const progress = Math.min(dy / 250, 1);
+          container.style.transform = `translateY(-${dy * 0.6}px)`;
+          container.style.opacity = 1 - progress * 0.5;
+          if (swipeFill) swipeFill.style.width = `${progress * 100}%`;
+          if (iosSwipe) {
+            iosSwipe.style.transform = `translateY(-${dy * 0.4}px)`;
+            iosSwipe.style.opacity = 1 - progress;
+          }
+        }
+      }, { passive: true });
+
+      const endSwipe = (y) => {
+        tracking = false;
+        container.classList.remove('swiping');
+        const dy = sy - y;
+        if (dy > 80) {
+          container.style.transform = 'translateY(-100vh)';
+          container.style.opacity = '0';
+          setTimeout(() => showPin(), 400);
+        } else {
+          container.style.transform = '';
+          container.style.opacity = '';
+          if (swipeFill) swipeFill.style.width = '0%';
+          if (iosSwipe) { iosSwipe.style.transform = ''; iosSwipe.style.opacity = ''; }
+        }
+      };
+
+      container.addEventListener('touchend', e => endSwipe(e.changedTouches[0].clientY));
+      container.addEventListener('touchcancel', e => endSwipe(e.changedTouches[0].clientY));
+
+      // Mouse fallback for desktop testing
+      let mouseDown = false;
+      container.addEventListener('mousedown', e => { sy = e.clientY; mouseDown = true; container.classList.add('swiping'); });
+      container.addEventListener('mousemove', e => {
+        if (!mouseDown) return;
+        const dy = sy - e.clientY;
+        if (dy > 0) {
+          const progress = Math.min(dy / 250, 1);
+          container.style.transform = `translateY(-${dy * 0.6}px)`;
+          container.style.opacity = 1 - progress * 0.5;
+          if (swipeFill) swipeFill.style.width = `${progress * 100}%`;
+          if (iosSwipe) {
+            iosSwipe.style.transform = `translateY(-${dy * 0.4}px)`;
+            iosSwipe.style.opacity = 1 - progress;
+          }
+        }
+      });
+      container.addEventListener('mouseup', e => { if (!mouseDown) return; mouseDown = false; endSwipe(e.clientY); });
+      container.addEventListener('mouseleave', e => { if (!mouseDown) return; mouseDown = false; endSwipe(e.clientY); });
+    }
+
+    /* ═══════════════════════════════════════
+       GO BACK TO LOCK SCREEN
+       ═══════════════════════════════════════ */
+    function goBackToLockScreen() {
+      pinBuffer = '';
+      renderDots();
+
+      const aPin = document.getElementById('a-pin');
+      const iPin = document.getElementById('i-pin');
+      const container = platform === 'android' ? document.getElementById('android-lock') : document.getElementById('ios-lock');
+
+      if (aPin.classList.contains('active')) {
+        aPin.style.transform = 'translateY(100%)';
+        aPin.style.opacity = '0';
+        setTimeout(() => {
+          aPin.classList.remove('active');
+          aPin.style.transform = '';
+          aPin.style.opacity = '';
+        }, 350);
+      }
+
+      if (iPin.classList.contains('active')) {
+        iPin.style.transform = 'translateY(100%)';
+        iPin.style.opacity = '0';
+        setTimeout(() => {
+          iPin.classList.remove('active');
+          iPin.style.transform = '';
+          iPin.style.opacity = '';
+        }, 350);
+      }
+
+      container.style.transform = 'translateY(0)';
+      container.style.opacity = '1';
+
+      const swipeFill = document.getElementById('a-swipe-fill');
+      if (swipeFill) swipeFill.style.width = '0%';
+      const iosSwipe = document.querySelector('.ios-swipe-area');
+      if (iosSwipe) { iosSwipe.style.transform = ''; iosSwipe.style.opacity = ''; }
+    }
+
+    /* ═══════════════════════════════════════
+       PIN SWIPE DOWN TO GO BACK
+       ═══════════════════════════════════════ */
+    function initPinSwipeBack() {
+      const overlay = platform === 'android' ? document.getElementById('a-pin') : document.getElementById('i-pin');
+      if (!overlay) return;
+
+      let startY = 0;
+      let tracking = false;
+
+      overlay.addEventListener('touchstart', e => {
+        if (e.target.closest('button, input')) return;
+        startY = e.touches[0].clientY;
+        tracking = true;
+        overlay.classList.add('swiping');
+      }, { passive: true });
+
+      overlay.addEventListener('touchmove', e => {
+        if (!tracking) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0) {
+          overlay.style.transform = `translateY(${dy * 0.5}px)`;
+          overlay.style.opacity = Math.max(0.4, 1 - dy / 350);
+        }
+      }, { passive: true });
+
+      const end = (y) => {
+        if (!tracking) return;
+        tracking = false;
+        overlay.classList.remove('swiping');
+        const dy = y - startY;
+        if (dy > 60) {
+          goBackToLockScreen();
+        } else {
+          overlay.style.transform = '';
+          overlay.style.opacity = '';
+        }
+      };
+
+      overlay.addEventListener('touchend', e => end(e.changedTouches[0].clientY));
+      overlay.addEventListener('touchcancel', e => end(e.changedTouches[0].clientY));
+    }
+
+    /* ═══════════════════════════════════════
+       PIN LOGIC
+       ═══════════════════════════════════════ */
+    function buildPad(containerId, backId, okId) {
+      const c = document.getElementById(containerId);
+      [1,2,3,4,5,6,7,8,9].forEach(n => {
+        const b = document.createElement('button');
+        b.className = 'pin-key';
+        b.textContent = n;
+        b.addEventListener('click', () => addPinDigit(n));
+        c.appendChild(b);
+      });
+      const zero = document.createElement('button');
+      zero.className = 'pin-key zero';
+      zero.textContent = '0';
+      zero.addEventListener('click', () => addPinDigit(0));
+      c.appendChild(zero);
+
+      document.getElementById(backId).addEventListener('click', removePinDigit);
+      document.getElementById(okId).addEventListener('click', submitPin);
+    }
+
+    function addPinDigit(d) {
+      if (busy || isLockedOut() || pinBuffer.length >= PIN_LENGTH) return;
+      pinBuffer += d;
+      renderDots();
+      vibrate(3);
+      if (pinBuffer.length === PIN_LENGTH) {
+        setTimeout(submitPin, 120);
+      }
+    }
+
+    function removePinDigit() {
+      if (busy || isLockedOut()) return;
+      pinBuffer = pinBuffer.slice(0, -1);
+      renderDots();
+    }
+
+    function renderDots() {
+      const dotsContainer = platform === 'android' ? document.getElementById('a-dots') : document.getElementById('i-dots');
+      if (!dotsContainer) return;
+      dotsContainer.querySelectorAll('.pin-dot').forEach((dot, i) => {
+        dot.classList.toggle('filled', i < pinBuffer.length);
+      });
+
+      const backId = platform === 'android' ? 'a-back' : 'i-back';
+      const backBtn = document.getElementById(backId);
+      if (backBtn) backBtn.disabled = pinBuffer.length === 0;
+    }
+
+    function submitPin() {
+      if (busy || isLockedOut() || pinBuffer.length === 0) return;
+      tryUnlock(pinBuffer);
+    }
+
+    function showPin() {
+      const pinId = platform === 'android' ? 'a-pin' : 'i-pin';
+      const pin = document.getElementById(pinId);
+      pin.classList.add('active', platform === 'android' ? 'anim-slide-up' : 'anim-fade-in');
+    }
+
+    function handlePinError() {
+      attempts++;
+      saveState();
+      vibrate([30, 80, 30]);
+
+      let overlay, err;
+      if (platform === 'macos') {
+        overlay = document.getElementById('m-overlay');
+        err = document.getElementById('m-error');
+        const input = document.getElementById('m-input');
+        input.value = '';
+        input.focus();
+      } else {
+        overlay = platform === 'android' ? document.getElementById('a-pin') : document.getElementById('i-pin');
+        err = platform === 'android' ? document.getElementById('a-error') : document.getElementById('i-error');
+        pinBuffer = '';
+        renderDots();
+      }
+
+      overlay.classList.add('anim-shake');
+      err.classList.add('show');
+      setTimeout(() => overlay.classList.remove('anim-shake'), 500);
+      setTimeout(() => err.classList.remove('show'), 2000);
+
+      if (attempts >= MAX_ATTEMPTS) {
+        lockoutEnd = Date.now() + COOLDOWN_SEC * 1000;
+        saveState();
+        startCooldown();
+      }
+    }
+
+    /* ═══════════════════════════════════════
+       KEYBOARD SUPPORT
+       ═══════════════════════════════════════ */
+    document.addEventListener('keydown', e => {
+      if (unlocked) return;
+      const aPin = document.getElementById('a-pin');
+      const iPin = document.getElementById('i-pin');
+      const mOverlay = document.getElementById('m-overlay');
+
+      if (e.key === 'Escape') {
+        if (mOverlay.classList.contains('active')) closeMacOS();
+        if (aPin.classList.contains('active') || iPin.classList.contains('active')) goBackToLockScreen();
+        return;
+      }
+
+      if (aPin.classList.contains('active') || iPin.classList.contains('active')) {
+        if (e.key >= '0' && e.key <= '9') addPinDigit(parseInt(e.key));
+        if (e.key === 'Backspace') removePinDigit();
+        if (e.key === 'Enter') submitPin();
+      }
+    });
+
+    /* ═══════════════════════════════════════
+       macOS UNLOCK
+       ═══════════════════════════════════════ */
+    function initMacOS() {
+      const overlay = document.getElementById('m-overlay');
+      const input = document.getElementById('m-input');
+      const hint = document.getElementById('m-hint');
+      const lock = document.getElementById('macos-lock');
+
+      const open = () => {
+        if (overlay.classList.contains('active')) return;
+        overlay.classList.add('active');
+        setTimeout(() => input.focus(), 100);
+      };
+
+      hint.addEventListener('click', open);
+      lock.addEventListener('click', open);
+
+      document.addEventListener('keydown', e => {
+        if (!unlocked && e.key === 'Enter' && !overlay.classList.contains('active')) open();
+      });
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitMacOS();
+      });
+
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) closeMacOS();
+      });
+    }
+
+    function closeMacOS() {
+      const overlay = document.getElementById('m-overlay');
+      const input = document.getElementById('m-input');
+      overlay.classList.remove('active');
+      input.value = '';
+      input.blur();
+    }
+
+    function submitMacOS() {
+      if (busy || isLockedOut()) return;
+      const val = document.getElementById('m-input').value;
+      if (!val) return;
+      tryUnlock(val);
+    }
+
+    /* ═══════════════════════════════════════
+       BOOT
+       ═══════════════════════════════════════ */
+    function boot() {
+      ['a-dots', 'i-dots'].forEach(id => {
+        const c = document.getElementById(id);
+        for (let i = 0; i < PIN_LENGTH; i++) { const d = document.createElement('div'); d.className = 'pin-dot'; c.appendChild(d); }
+      });
+      updateClock();
+      clockTimer = setInterval(updateClock, 1000);
+      initWallpaper();
+
+      if (platform === 'android') {
+        document.getElementById('android-lock').classList.add('active');
+        buildPad('a-pad', 'a-back', 'a-ok');
+        initSwipe();
+        initPinSwipeBack();
+      } else if (platform === 'ios') {
+        document.getElementById('ios-lock').classList.add('active');
+        buildPad('i-pad', 'i-back', 'i-ok');
+        initSwipe();
+        initPinSwipeBack();
+      } else {
+        document.getElementById('macos-lock').classList.add('active');
+        initMacOS();
+      }
+
+      checkCooldown();
+    }
+
+    boot();
+  
+</script>
+</body>
+</html>
